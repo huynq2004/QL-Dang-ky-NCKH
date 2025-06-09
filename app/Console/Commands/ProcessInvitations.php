@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Invitation;
 use App\Mail\InvitationProcessedMail;
-use Mail;
+use Illuminate\Support\Facades\Mail;
 
 class ProcessInvitations extends Command
 {
