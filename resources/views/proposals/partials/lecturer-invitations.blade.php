@@ -33,8 +33,12 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">{{ $invitation->created_at->format('Y-m-d H:i') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($invitation->status === 'pending')
-                                    <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2">
+                                    <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'invitation-detail-{{ $invitation->id }}')">
+                                        {{ __('View Details') }}
+                                    </x-secondary-button>
+
+                                    @if($invitation->status === 'pending')
                                         <form action="{{ route('invitations.accept', $invitation) }}" method="POST" class="inline">
                                             @csrf
                                             <x-primary-button>
@@ -47,8 +51,8 @@
                                                 {{ __('Reject') }}
                                             </x-danger-button>
                                         </form>
-                                    </div>
-                                @endif
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforeach
@@ -56,6 +60,9 @@
             </table>
         </div>
     </div>
+
+    <!-- Include Invitation Detail Modals -->
+    @include('proposals.partials.invitation-detail-modal')
 @else
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6 text-gray-500">

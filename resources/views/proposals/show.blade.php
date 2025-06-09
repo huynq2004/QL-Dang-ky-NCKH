@@ -30,13 +30,6 @@
                                 {{ ucfirst($proposal->status) }}
                             </span>
                         </div>
-
-                        @if($proposal->student)
-                            <div>
-                                <h3 class="font-semibold mb-2">{{ __('Student') }}</h3>
-                                <p>{{ $proposal->student->user->name }}</p>
-                            </div>
-                        @endif
                     </div>
 
                     @if($proposal->description)
@@ -45,6 +38,79 @@
                             <div class="prose max-w-none">
                                 {{ $proposal->description }}
                             </div>
+                        </div>
+                    @endif
+
+                    <!-- Participating Students -->
+                    <div class="mb-6">
+                        <h3 class="font-semibold mb-4">{{ __('Participating Students') }}</h3>
+                        @php
+                            $acceptedInvitations = $proposal->invitations->where('status', 'accepted');
+                        @endphp
+                        
+                        @if($acceptedInvitations->isNotEmpty())
+                            <div class="bg-white rounded-lg border border-gray-200">
+                                <ul class="divide-y divide-gray-200">
+                                    @foreach($acceptedInvitations as $invitation)
+                                        <li class="p-4">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <p class="font-medium text-gray-900">{{ $invitation->student->user->name }}</p>
+                                                    <p class="text-sm text-gray-500">{{ $invitation->student->student_id }}</p>
+                                                </div>
+                                                <div class="text-sm text-gray-500">
+                                                    {{ __('Joined: ') }} {{ $invitation->updated_at->format('d/m/Y') }}
+                                                </div>
+                                            </div>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @else
+                            <p class="text-gray-500">{{ __('No students are currently participating in this research topic.') }}</p>
+                        @endif
+                    </div>
+
+                    <!-- Pending Requests -->
+                    @if(Auth::user()->role === 'lecturer' && Auth::user()->lecturer->id === $proposal->lecturer_id)
+                        <div class="mb-6">
+                            <h3 class="font-semibold mb-4">{{ __('Pending Requests') }}</h3>
+                            @php
+                                $pendingInvitations = $proposal->invitations->where('status', 'pending');
+                            @endphp
+                            
+                            @if($pendingInvitations->isNotEmpty())
+                                <div class="bg-white rounded-lg border border-gray-200">
+                                    <ul class="divide-y divide-gray-200">
+                                        @foreach($pendingInvitations as $invitation)
+                                            <li class="p-4">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="font-medium text-gray-900">{{ $invitation->student->user->name }}</p>
+                                                        <p class="text-sm text-gray-500">{{ $invitation->student->student_id }}</p>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <form action="{{ route('invitations.accept', $invitation) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            <x-primary-button>
+                                                                {{ __('Accept') }}
+                                                            </x-primary-button>
+                                                        </form>
+                                                        <form action="{{ route('invitations.reject', $invitation) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            <x-danger-button>
+                                                                {{ __('Reject') }}
+                                                            </x-danger-button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @else
+                                <p class="text-gray-500">{{ __('No pending requests.') }}</p>
+                            @endif
                         </div>
                     @endif
 

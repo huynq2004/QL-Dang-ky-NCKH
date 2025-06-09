@@ -35,14 +35,13 @@ class ProposalController extends Controller
         $user = Auth::user();
         $data = [
             'activeTab' => 'available',
-            'proposals' => $user->role === 'lecturer' 
-                ? Proposal::where('lecturer_id', $user->lecturer->id)->get()
-                : Proposal::where('status', '!=', 'draft')->get(),
+            'proposals' => Proposal::where('status', '!=', 'draft')->get(),
             'studentProposals' => $user->role === 'student' ? ProposalFacade::getStudentProposals($user->student) : collect(),
             'invitations' => $user->role === 'student' 
                 ? ProposalFacade::getStudentInvitations($user->student)
                 : Invitation::where('lecturer_id', $user->lecturer->id)->get(),
-            'lecturers' => $user->role === 'student' ? ProposalFacade::getAvailableLecturers() : collect()
+            'lecturers' => $user->role === 'student' ? ProposalFacade::getAvailableLecturers() : collect(),
+            'lecturerProposals' => $user->role === 'lecturer' ? Proposal::where('lecturer_id', $user->lecturer->id)->get() : collect()
         ];
 
         return view('proposals.index', $data);
@@ -51,16 +50,15 @@ class ProposalController extends Controller
     public function myTopics()
     {
         $user = Auth::user();
-        if ($user->role !== 'student') {
-            abort(403);
-        }
-
         $data = [
             'activeTab' => 'my-topics',
             'proposals' => Proposal::where('status', '!=', 'draft')->get(),
-            'studentProposals' => ProposalFacade::getStudentProposals($user->student),
-            'invitations' => ProposalFacade::getStudentInvitations($user->student),
-            'lecturers' => ProposalFacade::getAvailableLecturers()
+            'studentProposals' => $user->role === 'student' ? ProposalFacade::getStudentProposals($user->student) : collect(),
+            'invitations' => $user->role === 'student' 
+                ? ProposalFacade::getStudentInvitations($user->student)
+                : Invitation::where('lecturer_id', $user->lecturer->id)->get(),
+            'lecturers' => $user->role === 'student' ? ProposalFacade::getAvailableLecturers() : collect(),
+            'lecturerProposals' => $user->role === 'lecturer' ? Proposal::where('lecturer_id', $user->lecturer->id)->get() : collect()
         ];
 
         return view('proposals.index', $data);
@@ -133,7 +131,8 @@ class ProposalController extends Controller
             'title' => 'required|string|max:255',
             'field' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'lecturer_id' => 'required|exists:lecturers,id'
+            'lecturer_id' => 'required|exists:lecturers,id',
+            'message' => 'nullable|string|max:500'
         ]);
 
         $user = Auth::user();
@@ -159,11 +158,16 @@ class ProposalController extends Controller
                 'student_id' => $user->student->id,
                 'lecturer_id' => $request->lecturer_id,
                 'proposal_id' => $proposal->id,
+                'message' => $request->message,
                 'status' => 'pending'
             ]);
+
+            return redirect()->route('my-topics')
+                ->with('success', 'Research topic has been created and a request has been sent to the supervisor. Please wait for their response.');
         }
 
-        return redirect()->route('my-topics')->with('success', 'Research topic created successfully.');
+        return redirect()->route('my-topics')
+            ->with('success', 'Research topic created successfully.');
     }
 
     public function update(Request $request, Proposal $proposal)
@@ -177,12 +181,13 @@ class ProposalController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'field' => 'required|string|max:100',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'status' => 'required|in:draft,active,completed,cancelled'
         ]);
 
-        ProposalFacade::updateProposal($proposal, $validated);
+        $this->proposalService->updateProposal($proposal, $validated);
 
-        return redirect()->route('proposals.index')->with('success', 'Proposal updated successfully.');
+        return redirect()->route('my-topics')->with('success', 'Research topic updated successfully.');
     }
 
     public function destroy(Proposal $proposal)
@@ -239,7 +244,25 @@ class ProposalController extends Controller
         switch ($action) {
             case 'accept':
                 $invitation->status = 'accepted';
-                $invitation->proposal->status = 'approved';
+                $invitation->proposal->status = 'active';
+                
+                // Create invitation for the student who created the proposal if they don't have one
+                if ($invitation->proposal->student_id) {
+                    $existingInvitation = Invitation::where([
+                        'student_id' => $invitation->proposal->student_id,
+                        'proposal_id' => $invitation->proposal->id
+                    ])->first();
+
+                    if (!$existingInvitation) {
+                        Invitation::create([
+                            'student_id' => $invitation->proposal->student_id,
+                            'lecturer_id' => $invitation->proposal->lecturer_id,
+                            'proposal_id' => $invitation->proposal->id,
+                            'status' => 'accepted'
+                        ]);
+                    }
+                }
+                
                 $invitation->proposal->save();
                 break;
             case 'reject':
@@ -326,19 +349,26 @@ class ProposalController extends Controller
         $user = Auth::user();
         
         if ($user->role !== 'student') {
-            abort(403);
+            return redirect()->back()->with('error', 'Only students can request to join a research topic.');
         }
 
-        // Check if request already exists
+        // Check if the proposal already has 5 participating students
+        $participatingStudentsCount = $proposal->invitations()->where('status', 'accepted')->count();
+        if ($participatingStudentsCount >= 5) {
+            return redirect()->back()->with('error', 'This research topic has reached the maximum number of participating students (5).');
+        }
+
+        // Check if student already has a request for this proposal
         $existingRequest = Invitation::where([
             'student_id' => $user->student->id,
             'proposal_id' => $proposal->id
-        ])->exists();
+        ])->first();
 
         if ($existingRequest) {
-            return redirect()->back()->with('error', 'You have already requested to join this research topic.');
+            return redirect()->back()->with('error', 'You have already sent a request for this research topic.');
         }
 
+        // Create new invitation
         Invitation::create([
             'student_id' => $user->student->id,
             'lecturer_id' => $proposal->lecturer_id,
@@ -346,7 +376,7 @@ class ProposalController extends Controller
             'status' => 'pending'
         ]);
 
-        return redirect()->back()->with('success', 'Request sent successfully.');
+        return redirect()->back()->with('success', 'Your request has been sent. Please wait for the supervisor\'s response.');
     }
 
     public function withdrawRequest(Invitation $invitation)
