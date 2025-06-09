@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Proposal extends Model
+{
+    protected $fillable = [
+        'title',
+        'description',
+        'field',
+        'lecturer_id',
+        'current_members',
+        'is_visible',
+    ];
+
+    protected $casts = [
+        'is_visible' => 'boolean',
+    ];
+
+    public function lecturer(): BelongsTo
+    {
+        return $this->belongsTo(Lecturer::class);
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(Invitation::class);
+    }
+
+    public function getAcceptedMembersCount(): int
+    {
+        return $this->invitations()
+            ->where('status', 'accepted')
+            ->count();
+    }
+
+    public function canAcceptMoreMembers(): bool
+    {
+        return $this->getAcceptedMembersCount() < 5;
+    }
+} 
