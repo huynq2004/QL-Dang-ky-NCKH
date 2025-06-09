@@ -16,6 +16,7 @@ class Proposal extends Model
         'student_id',
         'current_members',
         'is_visible',
+        'status',
     ];
 
     protected $casts = [
