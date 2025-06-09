@@ -35,9 +35,13 @@ class ProposalController extends Controller
         $user = Auth::user();
         $data = [
             'activeTab' => 'available',
-            'proposals' => ProposalFacade::getProposals(),
+            'proposals' => $user->role === 'lecturer' 
+                ? Proposal::where('lecturer_id', $user->lecturer->id)->get()
+                : Proposal::where('status', '!=', 'draft')->get(),
             'studentProposals' => $user->role === 'student' ? ProposalFacade::getStudentProposals($user->student) : collect(),
-            'invitations' => $user->role === 'student' ? ProposalFacade::getStudentInvitations($user->student) : collect(),
+            'invitations' => $user->role === 'student' 
+                ? ProposalFacade::getStudentInvitations($user->student)
+                : Invitation::where('lecturer_id', $user->lecturer->id)->get(),
             'lecturers' => $user->role === 'student' ? ProposalFacade::getAvailableLecturers() : collect()
         ];
 
@@ -53,7 +57,7 @@ class ProposalController extends Controller
 
         $data = [
             'activeTab' => 'my-topics',
-            'proposals' => ProposalFacade::getProposals(),
+            'proposals' => Proposal::where('status', '!=', 'draft')->get(),
             'studentProposals' => ProposalFacade::getStudentProposals($user->student),
             'invitations' => ProposalFacade::getStudentInvitations($user->student),
             'lecturers' => ProposalFacade::getAvailableLecturers()
@@ -71,7 +75,7 @@ class ProposalController extends Controller
 
         $data = [
             'activeTab' => 'lecturers',
-            'proposals' => ProposalFacade::getProposals(),
+            'proposals' => Proposal::where('status', '!=', 'draft')->get(),
             'studentProposals' => ProposalFacade::getStudentProposals($user->student),
             'invitations' => ProposalFacade::getStudentInvitations($user->student),
             'lecturers' => ProposalFacade::getAvailableLecturers()
@@ -142,7 +146,7 @@ class ProposalController extends Controller
         
         if ($user->role === 'student') {
             $proposal->student_id = $user->student->id;
-            $proposal->status = 'pending';
+            $proposal->status = 'draft';
         } else {
             $proposal->status = 'active';
         }
