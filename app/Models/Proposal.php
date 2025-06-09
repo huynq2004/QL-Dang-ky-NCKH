@@ -13,6 +13,7 @@ class Proposal extends Model
         'description',
         'field',
         'lecturer_id',
+        'student_id',
         'current_members',
         'is_visible',
     ];
@@ -24,6 +25,11 @@ class Proposal extends Model
     public function lecturer(): BelongsTo
     {
         return $this->belongsTo(Lecturer::class);
+    }
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
     }
 
     public function invitations(): HasMany

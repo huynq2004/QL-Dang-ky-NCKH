@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::create('invitations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained();
-            $table->foreignId('lecturer_id')->constrained();
-            $table->foreignId('proposal_id')->nullable()->constrained();
+            $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
+            $table->foreignId('lecturer_id')->constrained('lecturers')->onDelete('cascade');
+            $table->foreignId('proposal_id')->nullable()->constrained('proposals')->onDelete('cascade');
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
-            $table->text('message')->nullable();
             $table->timestamp('processed_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
     }

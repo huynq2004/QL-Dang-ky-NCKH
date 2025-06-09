@@ -22,6 +22,8 @@ class Invitation extends Model
 
     protected $casts = [
         'processed_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
 
     public function student(): BelongsTo

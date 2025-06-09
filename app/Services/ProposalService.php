@@ -3,110 +3,156 @@
 namespace App\Services;
 
 use App\Models\Proposal;
+use App\Models\Student;
+use App\Models\Lecturer;
 use App\Models\Invitation;
-use App\Mail\InvitationMail;
-use App\Mail\InvitationProcessedMail;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
+use App\Models\User;
 use App\Contracts\ProposalServiceInterface;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class ProposalService implements ProposalServiceInterface
 {
-    public function getProposals()
+    public function getProposals(): Collection
     {
-        return Proposal::with('lecturer')->get();
+        $user = Auth::user();
+
+        if ($user->role === 'lecturer') {
+            return Proposal::with('lecturer.user')
+                ->where('lecturer_id', $user->lecturer->id)
+                ->get();
+        } elseif ($user->role === 'student') {
+            return Proposal::with('lecturer.user')
+                ->where('status', 'active')
+                ->get();
+        }
+
+        return Proposal::with('lecturer.user')->get();
     }
 
-    public function addProposal($data, $lecturer)
+    public function getInvitations(User $user): Collection
     {
-        return Proposal::create([
-            'title' => $data['title'],
-            'field' => $data['field'],
-            'description' => $data['description'] ?? null,
-            'lecturer_id' => $lecturer->id,
-        ]);
+        if ($user->role === 'lecturer') {
+            return Invitation::with(['student.user', 'proposal'])
+                ->where('lecturer_id', $user->lecturer->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } elseif ($user->role === 'student') {
+            return Invitation::with(['lecturer.user', 'proposal'])
+                ->where('student_id', $user->student->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        return Invitation::with(['student.user', 'lecturer.user', 'proposal'])->get();
     }
 
-    public function getAllProposals()
+    public function getStudentInvitations(Student $student): Collection
     {
-        return Proposal::with(['student', 'lecturer'])->latest()->get();
+        return Invitation::with(['lecturer.user', 'proposal'])
+            ->where('student_id', $student->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 
-    public function createProposal(array $data)
+    public function getLecturerProposals(Lecturer $lecturer): Collection
     {
-        $proposal = Proposal::create($data);
-        
-        // Create invitation for the lecturer
-        $invitation = Invitation::create([
-            'student_id' => $data['student_id'],
-            'lecturer_id' => $data['lecturer_id'],
-            'proposal_id' => $proposal->id,
-            'status' => 'pending',
-            'email' => $proposal->lecturer->email,
-            'token' => Str::random(32)
-        ]);
+        return Proposal::where('lecturer_id', $lecturer->id)->get();
+    }
 
-        // Send invitation email
-        Mail::to($invitation->email)->send(new InvitationMail($invitation));
+    public function canSendInvitation(Student $student, Lecturer $lecturer): bool
+    {
+        // Check if student already has a pending or accepted invitation with this lecturer
+        $existingInvitation = Invitation::where('student_id', $student->id)
+            ->where('lecturer_id', $lecturer->id)
+            ->whereIn('status', ['pending', 'accepted'])
+            ->exists();
 
+        if ($existingInvitation) {
+            return false;
+        }
+
+        // Check if lecturer has reached their maximum student limit
+        $acceptedInvitations = $this->getActiveStudentsCount($lecturer);
+        return $acceptedInvitations < ($lecturer->max_students ?? 5);
+    }
+
+    public function createProposal(array $data): Proposal
+    {
+        return Proposal::create($data);
+    }
+
+    public function updateProposal(Proposal $proposal, array $data): Proposal
+    {
+        $proposal->update($data);
         return $proposal;
     }
 
-    public function getInvitations($user)
+    public function deleteProposal(Proposal $proposal): bool
     {
-        if ($user->isStudent()) {
-            return Invitation::where('student_id', $user->student->id)
-                ->with(['lecturer', 'proposal'])
-                ->get();
-        }
-        
-        return Invitation::where('lecturer_id', $user->lecturer->id)
-                ->with(['student', 'proposal'])
-                ->get();
+        return $proposal->delete();
     }
 
-    public function processInvitation($id, $action)
+    public function processInvitation(int $id, string $action): Invitation
     {
         $invitation = Invitation::findOrFail($id);
-        
-        if ($action === 'accept' && !$invitation->proposal->canAcceptMoreMembers()) {
-            throw new \Exception('Group has reached maximum members');
-        }
-
-        $invitation->process($action);
-        
-        // Send email notification
-        Mail::to($invitation->student->user->email)
-            ->send(new InvitationProcessedMail($invitation));
-
+        $invitation->status = $action;
+        $invitation->save();
         return $invitation;
     }
 
-    public function sendInvitation($student, $lecturer, $proposalId = null)
+    public function sendInvitation(Student $student, Lecturer $lecturer, ?int $proposalId = null): Invitation
     {
-        // Check if lecturer has reached max groups
-        $activeGroups = Invitation::where('lecturer_id', $lecturer->id)
-            ->where('status', 'accepted')
-            ->distinct('proposal_id')
-            ->count();
-
-        if ($activeGroups >= 5) {
-            throw new \Exception('Lecturer has reached maximum number of groups');
-        }
-
-        // Create invitation
-        $invitation = Invitation::create([
+        return Invitation::create([
             'student_id' => $student->id,
             'lecturer_id' => $lecturer->id,
             'proposal_id' => $proposalId,
             'status' => 'pending'
         ]);
+    }
 
-        // Send email notification
-        Mail::to($lecturer->user->email)
-            ->send(new InvitationMail($invitation));
+    public function autoProcessExpiredInvitations(): void
+    {
+        Invitation::where('status', 'pending')
+            ->where('created_at', '<=', now()->subDays(7))
+            ->update(['status' => 'expired']);
+    }
 
-        return $invitation;
+    public function withdrawInvitation(int $id): void
+    {
+        $invitation = Invitation::findOrFail($id);
+        $invitation->status = 'withdrawn';
+        $invitation->save();
+    }
+
+    public function getActiveProposalsCount(Lecturer $lecturer): int
+    {
+        return Proposal::where('lecturer_id', $lecturer->id)
+            ->where('status', 'active')
+            ->count();
+    }
+
+    public function getActiveStudentsCount(Lecturer $lecturer): int
+    {
+        return Invitation::where('lecturer_id', $lecturer->id)
+            ->where('status', 'accepted')
+            ->count();
+    }
+
+    public function createInvitation(array $data): Invitation
+    {
+        return Invitation::create($data);
+    }
+
+    public function getStudentProposals(Student $student): Collection
+    {
+        return Proposal::where('student_id', $student->id)->get();
+    }
+
+    public function getAvailableLecturers(): Collection
+    {
+        return Lecturer::with('user')
+            ->where('status', 'active')
+            ->get();
     }
 } 

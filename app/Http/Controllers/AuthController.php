@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('guest')->except(['logout', 'showEditForm']);
+    }
+
     public function showLoginForm()
     {
         return view('auth.login');
@@ -21,7 +26,18 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/');
+
+            // Redirect based on user role
+            $user = Auth::user();
+            switch ($user->role) {
+                case 'admin':
+                    return redirect()->route('admin.proposals.index');
+                case 'lecturer':
+                    return redirect()->route('proposals.my');
+                case 'student':
+                default:
+                    return redirect()->route('proposals.index');
+            }
         }
 
         return back()->withErrors([
@@ -34,7 +50,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/');
+        return redirect()->route('login');
     }
 
     public function showEditForm()
