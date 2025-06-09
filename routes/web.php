@@ -10,6 +10,7 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/proposals', [ProposalController::class, 'index'])->name('proposals.index');
     Route::get('/dashboard', [ProposalController::class, 'index'])->name('dashboard');
     Route::get('/my-topics', [ProposalController::class, 'myTopics'])->name('my-topics');
     Route::get('/find-supervisor', [ProposalController::class, 'findSupervisor'])->name('find-supervisor');
@@ -17,6 +18,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/proposals/{proposal}', [ProposalController::class, 'show'])->name('proposals.show');
     Route::post('/proposals', [ProposalController::class, 'store'])->name('proposals.store');
+    Route::put('/proposals/{proposal}', [ProposalController::class, 'update'])->name('proposals.update');
+    Route::delete('/proposals/{proposal}', [ProposalController::class, 'destroy'])->name('proposals.destroy');
     Route::post('/proposals/{proposal}/request', [ProposalController::class, 'requestToJoin'])->name('proposals.request');
     Route::delete('/proposals/request/{invitation}', [ProposalController::class, 'withdrawRequest'])->name('proposals.withdraw-request');
 
