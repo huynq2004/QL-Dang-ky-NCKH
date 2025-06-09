@@ -1,34 +1,31 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
+use App\Http\Controllers\InvitationController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('login');
+    return redirect()->route('dashboard');
 });
 
-// Authentication Routes
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [ProposalController::class, 'index'])->name('dashboard');
+    Route::get('/my-topics', [ProposalController::class, 'myTopics'])->name('my-topics');
+    Route::get('/find-supervisor', [ProposalController::class, 'findSupervisor'])->name('find-supervisor');
+    Route::get('/my-invitations', [InvitationController::class, 'myInvitations'])->name('my-invitations');
 
-// Protected Routes
-Route::middleware(['auth'])->group(function () {
-    // Profile Routes
-    Route::get('/profile/edit', [AuthController::class, 'showEditForm'])->name('profile.edit');
-    Route::put('/profile', [AuthController::class, 'update'])->name('profile.update');
+    Route::get('/proposals/{proposal}', [ProposalController::class, 'show'])->name('proposals.show');
+    Route::post('/proposals', [ProposalController::class, 'store'])->name('proposals.store');
+    Route::post('/proposals/{proposal}/request', [ProposalController::class, 'requestToJoin'])->name('proposals.request');
+    Route::delete('/proposals/request/{invitation}', [ProposalController::class, 'withdrawRequest'])->name('proposals.withdraw-request');
 
-    // Proposal Routes
-    Route::resource('proposals', ProposalController::class);
-    
-    // Invitation Routes (as part of Proposals)
-    Route::get('/proposals/invitations', [ProposalController::class, 'invitations'])->name('proposals.invitations');
-    Route::post('/proposals/invitations/{invitation}/process', [ProposalController::class, 'processInvitation'])->name('proposals.process-invitation');
+    Route::post('/invitations/{invitation}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
+    Route::post('/invitations/{invitation}/reject', [InvitationController::class, 'reject'])->name('invitations.reject');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+require __DIR__.'/auth.php';

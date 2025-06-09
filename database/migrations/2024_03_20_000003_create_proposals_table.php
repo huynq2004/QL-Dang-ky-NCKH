@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::create('proposals', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->text('description')->nullable();
             $table->string('field');
-            $table->foreignId('lecturer_id')->constrained();
-            $table->integer('current_members')->default(0);
+            $table->text('description')->nullable();
+            $table->foreignId('lecturer_id')->constrained('lecturers')->onDelete('cascade');
+            $table->enum('status', ['draft', 'active', 'completed', 'cancelled'])->default('draft');
             $table->boolean('is_visible')->default(true);
             $table->timestamps();
         });
