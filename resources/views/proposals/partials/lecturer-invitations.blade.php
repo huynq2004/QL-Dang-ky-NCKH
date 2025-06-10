@@ -4,11 +4,11 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Student') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Proposal') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Status') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Received At') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Actions') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Sinh viên') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Đề tài') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Trạng thái') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Gửi lúc') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Thao tác') }}</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -21,7 +21,7 @@
                                         {{ $invitation->proposal->title }}
                                     </a>
                                 @else
-                                    <em>{{ __('General Research Interest') }}</em>
+                                    <em>{{ __('Lĩnh vực nghiên cứu') }}</em>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -35,20 +35,20 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-2">
                                     <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'invitation-detail-{{ $invitation->id }}')">
-                                        {{ __('View Details') }}
+                                        {{ __('Xem chi tiết') }}
                                     </x-secondary-button>
 
                                     @if($invitation->status === 'pending')
                                         <form action="{{ route('invitations.accept', $invitation) }}" method="POST" class="inline">
                                             @csrf
                                             <x-primary-button>
-                                                {{ __('Accept') }}
+                                                {{ __('Chấp nhận') }}
                                             </x-primary-button>
                                         </form>
                                         <form action="{{ route('invitations.reject', $invitation) }}" method="POST" class="inline">
                                             @csrf
                                             <x-danger-button>
-                                                {{ __('Reject') }}
+                                                {{ __('Từ chối') }}
                                             </x-danger-button>
                                         </form>
                                     @endif

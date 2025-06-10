@@ -5,7 +5,7 @@
     <div class="row justify-content-center">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">{{ __('Research Invitations') }}</div>
+                <div class="card-header">{{ __('Lời mời hướng dẫn') }}</div>
 
                 <div class="card-body">
                     @if (session('success'))
@@ -18,12 +18,12 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Proposal</th>
-                                    <th>Student</th>
-                                    <th>Lecturer</th>
-                                    <th>Status</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
+                                    <th>Đề tài</th>
+                                    <th>Sinh viên</th>
+                                    <th>Giảng viên</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -42,11 +42,11 @@
                                             @if($invitation->status === 'pending' && $invitation->lecturer_id === auth()->id())
                                                 <form action="{{ route('invitations.accept', $invitation) }}" method="POST" class="d-inline">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                                                    <button type="submit" class="btn btn-success btn-sm">Chấp nhận</button>
                                                 </form>
                                                 <form action="{{ route('invitations.reject', $invitation) }}" method="POST" class="d-inline">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Từ chối</button>
                                                 </form>
                                             @endif
                                         </td>

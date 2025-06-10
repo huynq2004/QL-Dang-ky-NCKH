@@ -8,27 +8,27 @@
                     <li class="me-2">
                         <a href="{{ route('dashboard') }}" 
                            class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'available' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
-                            {{ __('Available Proposals') }}
+                            {{ __('ĐỀ TÀI NGHIÊN CỨU') }}
                         </a>
                     </li>
                     <li class="me-2">
                         <a href="{{ route('my-topics') }}"
                            class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'my-topics' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
-                            {{ __('My Research Topics') }}
+                            {{ __('ĐANG THAM GIA') }}
                         </a>
                     </li>
                     @if(Auth::user()->role === 'student')
                     <li class="me-2">
                         <a href="{{ route('find-supervisor') }}"
                            class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'lecturers' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
-                            {{ __('Find Supervisor') }}
+                            {{ __('TÌM GIẢNG VIÊN') }}
                         </a>
                     </li>
                     @endif
                     <li class="me-2">
                         <a href="{{ route('my-invitations') }}"
                            class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'invitations' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
-                            {{ Auth::user()->role === 'lecturer' ? __('Student Requests') : __('My Requests') }}
+                            {{ Auth::user()->role === 'lecturer' ? __('LỜI MỜI HƯỚNG DẪN') : __('YÊU CẦU THAM GIA') }}
                         </a>
                     </li>
                 </ul>
@@ -42,7 +42,7 @@
                     @if(Auth::user()->role === 'lecturer')
                     <div class="mb-4 text-end">
                         <x-primary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'new-lecturer-proposal')">
-                            {{ __('Create Research Topic') }}
+                            {{ __('Tạo đề tài nghiên cứu') }}
                         </x-primary-button>
                     </div>
                     @endif
@@ -55,8 +55,8 @@
                                     <p class="text-gray-600 mb-4">{{ $proposal->field }}</p>
                                     
                                     <div class="mb-4">
-                                        <p class="mb-1"><span class="font-semibold">{{ __('Lecturer') }}:</span> {{ $proposal->lecturer->user->name }}</p>
-                                        <p><span class="font-semibold">{{ __('Department') }}:</span> {{ $proposal->lecturer->department }}</p>
+                                        <p class="mb-1"><span class="font-semibold">{{ __('Giảng viên') }}:</span> {{ $proposal->lecturer->user->name }}</p>
+                                        <p><span class="font-semibold">{{ __('Khoa/Bộ môn') }}:</span> {{ $proposal->lecturer->department }}</p>
                                     </div>
 
                                     @if($proposal->description)
@@ -65,7 +65,7 @@
 
                                     <div class="flex items-center gap-4">
                                         <a href="{{ route('proposals.show', $proposal) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-gray-800 rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                                            {{ __('View Details') }}
+                                            {{ __('Xem chi tiết') }}
                                         </a>
                                         @if(Auth::user()->role === 'student' && $proposal->status === 'active')
                                             @php
@@ -79,7 +79,7 @@
                                                 <form action="{{ route('proposals.request', $proposal) }}" method="POST" class="inline">
                                                     @csrf
                                                     <x-secondary-button type="submit">
-                                                        {{ __('Request to Join') }}
+                                                        {{ __('Yêu cầu tham gia') }}
                                                     </x-secondary-button>
                                                 </form>
                                             @elseif($existingRequest)
@@ -91,7 +91,7 @@
                                                         @csrf
                                                         @method('DELETE')
                                                         <x-danger-button>
-                                                            {{ __('Withdraw') }}
+                                                            {{ __('Thu hồi yêu cầu') }}
                                                         </x-danger-button>
                                                     </form>
                                                 @endif
@@ -104,7 +104,7 @@
                             <div class="col-span-2">
                                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                     <div class="p-6 text-gray-500">
-                                        {{ __('No proposals found.') }}
+                                        {{ __('Không tìm thấy đề tài nghiên cứu.') }}
                                     </div>
                                 </div>
                             </div>
@@ -117,7 +117,7 @@
                     @if(Auth::user()->role === 'lecturer')
                     <div class="mb-4 text-end">
                         <x-primary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'new-lecturer-proposal')">
-                            {{ __('Create Research Topic') }}
+                            {{ __('Tạo đề tài nghiên cứu') }}
                         </x-primary-button>
                     </div>
 
@@ -137,14 +137,14 @@
 
                                     <div class="flex items-center gap-4">
                                         <a href="{{ route('proposals.show', $proposal) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-gray-800 rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                                            {{ __('View Details') }}
+                                            {{ __('Xem chi tiết') }}
                                         </a>
                                         <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'edit-proposal-{{ $proposal->id }}')">
-                                            {{ __('Edit') }}
+                                            {{ __('Sửa') }}
                                         </x-secondary-button>
                                         @if($proposal->invitations->isEmpty())
                                             <x-danger-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'delete-proposal-{{ $proposal->id }}')">
-                                                {{ __('Delete') }}
+                                                {{ __('Xóa') }}
                                             </x-danger-button>
                                         @endif
                                     </div>
@@ -154,7 +154,7 @@
                             <div class="col-span-2">
                                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                     <div class="p-6 text-gray-500">
-                                        {{ __('You haven\'t created any research topics yet.') }}
+                                        {{ __('Bạn chưa tạo bất kỳ đề tài nghiên cứu nào.') }}
                                     </div>
                                 </div>
                             </div>
@@ -163,7 +163,7 @@
                     @else
                         <div class="mb-4 text-end">
                             <x-primary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'new-student-proposal')">
-                                {{ __('Create Research Topic') }}
+                                {{ __('Tạo đề tài nghiên cứu') }}
                             </x-primary-button>
                         </div>
 
@@ -180,7 +180,7 @@
 
                                         <div class="flex space-x-4">
                                             <a href="{{ route('proposals.show', $proposal) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                                                {{ __('View Details') }}
+                                                {{ __('Xem chi tiết') }}
                                             </a>
                                         </div>
                                     </div>
@@ -189,7 +189,7 @@
                                 <div class="col-span-2">
                                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                         <div class="p-6 text-gray-500">
-                                            {{ __('You haven\'t created any research topics yet.') }}
+                                            {{ __('Bạn chưa tạo bất kỳ đề tài nghiên cứu nào.') }}
                                         </div>
                                     </div>
                                 </div>
@@ -207,14 +207,14 @@
                                 <div class="p-6">
                                     <h3 class="text-lg font-medium mb-2">{{ $lecturer->user->name }}</h3>
                                     <div class="mb-4 text-sm">
-                                        <p><strong>{{ __('Department') }}:</strong> {{ $lecturer->department }}</p>
-                                        <p><strong>{{ __('Title') }}:</strong> {{ $lecturer->title }}</p>
-                                        <p><strong>{{ __('Specialization') }}:</strong> {{ $lecturer->specialization }}</p>
+                                        <p><strong>{{ __('Khoa/Bộ môn') }}:</strong> {{ $lecturer->department }}</p>
+                                        <p><strong>{{ __('Chức vụ') }}:</strong> {{ $lecturer->title }}</p>
+                                        <p><strong>{{ __('Chuyên ngành') }}:</strong> {{ $lecturer->specialization }}</p>
                                     </div>
 
                                     <div class="flex space-x-4">
                                         <x-primary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'invite-lecturer-{{ $lecturer->id }}')">
-                                            {{ __('Request Supervision') }}
+                                            {{ __('Yêu cầu hướng dẫn') }}
                                         </x-primary-button>
                                     </div>
                                 </div>
@@ -223,7 +223,7 @@
                             <div class="col-span-2">
                                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                     <div class="p-6 text-gray-500">
-                                        {{ __('No lecturers available.') }}
+                                        {{ __('Không có giảng viên nào.') }}
                                     </div>
                                 </div>
                             </div>

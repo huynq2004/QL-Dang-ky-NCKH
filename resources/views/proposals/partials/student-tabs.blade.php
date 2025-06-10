@@ -2,7 +2,7 @@
 <div id="my-topics" class="tab-content {{ $activeTab !== 'my-topics' ? 'hidden' : '' }}">
     <div class="mb-4 text-end">
         <x-primary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'new-student-proposal')">
-            {{ __('Create Research Topic') }}
+            {{ __('Tạo đề tài nghiên cứu') }}
         </x-primary-button>
     </div>
 
@@ -19,7 +19,7 @@
 
                     <div class="flex space-x-4">
                         <a href="{{ route('proposals.show', $proposal) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                            {{ __('View Details') }}
+                            {{ __('Xem chi tiết') }}
                         </a>
                     </div>
                 </div>
@@ -28,7 +28,7 @@
             <div class="col-span-2">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-500">
-                        {{ __('You haven\'t created any research topics yet.') }}
+                        {{ __('Bạn chưa tạo bất kỳ đề tài nghiên cứu nào.') }}
                     </div>
                 </div>
             </div>
@@ -51,7 +51,7 @@
 
                     <div class="flex space-x-4">
                         <x-primary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'invite-lecturer-{{ $lecturer->id }}')">
-                            {{ __('Request Supervision') }}
+                            {{ __('Yêu cầu hướng dẫn') }}
                         </x-primary-button>
                     </div>
                 </div>
@@ -60,7 +60,7 @@
             <div class="col-span-2">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-500">
-                        {{ __('No lecturers available.') }}
+                        {{ __('Không có giảng viên nào.') }}
                     </div>
                 </div>
             </div>

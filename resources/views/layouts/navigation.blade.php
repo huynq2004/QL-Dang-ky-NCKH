@@ -13,28 +13,9 @@
                 <!-- School Name and System Title -->
                 <div class="flex items-center ms-6">
                     <div class="text-gray-800">
-                        <h1 class="text-xl font-bold">Trường Đại học Thủy lợi</h1>
+                        <h1 class="text-xl font-bold">TRƯỜNG ĐẠI HỌC THỦY LỢI</h1>
                         <h2 class="text-lg">Nghiên cứu khoa học sinh viên</h2>
                     </div>
-                </div>
-
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:ml-10 sm:flex items-center">
-                    @if (Auth::user()->role !== 'admin')
-                        <x-nav-link :href="route('my-topics')" :active="request()->routeIs('my-topics')">
-                            {{ __('My Research Topics') }}
-                        </x-nav-link>
-
-                        @if (Auth::user()->role === 'student')
-                            <x-nav-link :href="route('find-supervisor')" :active="request()->routeIs('find-supervisor')">
-                                {{ __('Find Supervisor') }}
-                            </x-nav-link>
-                        @endif
-
-                        <x-nav-link :href="route('my-invitations')" :active="request()->routeIs('my-invitations')">
-                            {{ Auth::user()->role === 'lecturer' ? __('Student Requests') : __('My Requests') }}
-                        </x-nav-link>
-                    @endif
                 </div>
             </div>
 

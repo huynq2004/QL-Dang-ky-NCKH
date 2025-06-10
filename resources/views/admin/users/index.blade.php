@@ -15,12 +15,12 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ và tên</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai trò</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -54,16 +54,16 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $user->email_verified_at ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                                {{ $user->email_verified_at ? 'Verified' : 'Unverified' }}
+                                                {{ $user->email_verified_at ? 'Đã xác thực' : 'Chưa xác thực' }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'edit-user-{{ $user->id }}')">
-                                                {{ __('Edit') }}
+                                                {{ __('Chỉnh sửa') }}
                                             </x-secondary-button>
                                             @if($user->id !== Auth::id())
                                                 <x-danger-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'delete-user-{{ $user->id }}')">
-                                                    {{ __('Delete') }}
+                                                    {{ __('Xóa') }}
                                                 </x-danger-button>
                                             @endif
                                         </td>
@@ -90,7 +90,7 @@
             @csrf
 
             <h2 class="text-lg font-medium text-gray-900">
-                {{ __('Create New User') }}
+                {{ __('Thêm người dùng mới') }}
             </h2>
 
             <div class="mt-6">
@@ -108,9 +108,9 @@
             <div class="mt-6">
                 <x-input-label for="role" :value="__('Role')" />
                 <select id="role" name="role" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" x-model="role">
-                    <option value="student">Student</option>
-                    <option value="lecturer">Lecturer</option>
-                    <option value="admin">Admin</option>
+                    <option value="student">Sinh viên</option>
+                    <option value="lecturer">Giảng viên</option>
+                    <option value="admin">Quản trị viên</option>
                 </select>
                 <x-input-error :messages="$errors->get('role')" class="mt-2" />
             </div>
@@ -135,11 +135,11 @@
 
             <div class="mt-6 flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">
-                    {{ __('Cancel') }}
+                    {{ __('Hủy') }}
                 </x-secondary-button>
 
                 <x-primary-button class="ml-3">
-                    {{ __('Create') }}
+                    {{ __('Tạo') }}
                 </x-primary-button>
             </div>
         </form>
@@ -153,7 +153,7 @@
                 @method('PUT')
 
                 <h2 class="text-lg font-medium text-gray-900">
-                    {{ __('Edit User') }}
+                    {{ __('Chỉnh sửa thông tin người dùng') }}
                 </h2>
 
                 <div class="mt-6">
@@ -171,8 +171,8 @@
                 <div class="mt-6">
                     <x-input-label for="role-{{ $user->id }}" :value="__('Role')" />
                     <select id="role-{{ $user->id }}" name="role" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" x-model="role">
-                        <option value="student" {{ $user->role === 'student' ? 'selected' : '' }}>Student</option>
-                        <option value="lecturer" {{ $user->role === 'lecturer' ? 'selected' : '' }}>Lecturer</option>
+                        <option value="student" {{ $user->role === 'student' ? 'selected' : '' }}>Sinh viên</option>
+                        <option value="lecturer" {{ $user->role === 'lecturer' ? 'selected' : '' }}>Giảng viên</option>
                         <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
                     </select>
                     <x-input-error :messages="$errors->get('role')" class="mt-2" />
@@ -215,11 +215,11 @@
 
                 <div class="mt-6 flex justify-end">
                     <x-secondary-button x-on:click="$dispatch('close')">
-                        {{ __('Cancel') }}
+                        {{ __('Hủy') }}
                     </x-secondary-button>
 
                     <x-primary-button class="ml-3">
-                        {{ __('Save') }}
+                        {{ __('Lưu') }}
                     </x-primary-button>
                 </div>
             </form>
@@ -232,20 +232,20 @@
                 @method('DELETE')
 
                 <h2 class="text-lg font-medium text-gray-900">
-                    {{ __('Delete User') }}
+                    {{ __('Xóa người dùng') }}
                 </h2>
 
                 <p class="mt-1 text-sm text-gray-600">
-                    {{ __('Are you sure you want to delete this user? This action cannot be undone.') }}
+                    {{ __('Bạn có chắc chắn muốn xóa người dùng này không? Hành động này không thể hoàn tác.') }}
                 </p>
 
                 <div class="mt-6 flex justify-end">
                     <x-secondary-button x-on:click="$dispatch('close')">
-                        {{ __('Cancel') }}
+                        {{ __('Hủy') }}
                     </x-secondary-button>
 
                     <x-danger-button class="ml-3">
-                        {{ __('Delete User') }}
+                        {{ __('Xóa') }}
                     </x-danger-button>
                 </div>
             </form>
