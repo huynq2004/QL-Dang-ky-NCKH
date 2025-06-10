@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules;
+use App\Facades\UserManagementFacade;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class UserController extends Controller
 {
@@ -178,5 +181,54 @@ class UserController extends Controller
 
         return redirect()->route('users.index')
             ->with('success', 'User deleted successfully.');
+    }
+
+    public function editProfile(): View
+    {
+        $user = Auth::user();
+        return view('profile.edit', [
+            'user' => $user,
+            'canEdit' => true
+        ]);
+    }
+
+    public function viewProfile(): View
+    {
+        $user = Auth::user();
+        return view('profile.edit', [
+            'user' => $user,
+            'canEdit' => false
+        ]);
+    }
+
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+        
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
+        ]);
+
+        UserManagementFacade::updateUser($user->id, $validated);
+
+        return redirect()->route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    public function destroyProfile(Request $request): RedirectResponse
+    {
+        $request->validateWithBag('userDeletion', [
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = Auth::user();
+        Auth::logout();
+
+        UserManagementFacade::deleteUser($user->id);
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/');
     }
 } 
