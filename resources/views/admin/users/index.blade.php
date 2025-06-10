@@ -4,7 +4,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-semibold">{{ __('User Management') }}</h2>
+                        <!-- <h2 class="text-2xl font-semibold">{{ __('User Management') }}</h2> -->
                         <x-primary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'create-user')">
                             {{ __('Create User') }}
                         </x-primary-button>
