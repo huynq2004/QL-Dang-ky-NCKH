@@ -18,26 +18,6 @@
         <div class="min-h-screen bg-gray-100">
             @include('layouts.navigation')
 
-            @if (Auth::user()->role === 'admin')
-            <!-- Admin Navigation Tabs -->
-            <div class="bg-white shadow">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex space-x-8 h-16">
-                        <div class="flex">
-                            <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex items-center">
-                                <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                                    {{ __('Research Topics') }}
-                                </x-nav-link>
-                                <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
-                                    {{ __('User Management') }}
-                                </x-nav-link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
-
             <!-- Page Content -->
             <main>
                 {{ $slot }}
