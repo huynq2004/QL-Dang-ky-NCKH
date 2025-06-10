@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -35,37 +36,55 @@ class UserController extends Controller
                 ->with('error', 'Unauthorized action.');
         }
 
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', Rules\Password::defaults()],
-            'role' => ['required', 'string', 'in:student,lecturer,admin'],
-            'student_id' => ['required_if:role,student', 'string', 'unique:students,student_id'],
-            'lecturer_id' => ['required_if:role,lecturer', 'string', 'unique:lecturers,lecturer_id'],
-        ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-        ]);
-
-        // Create associated role model
-        if ($request->role === 'student') {
-            Student::create([
-                'user_id' => $user->id,
-                'student_id' => $request->student_id,
+        try {
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+                'password' => ['required', Rules\Password::defaults()],
+                'role' => ['required', 'string', 'in:student,lecturer,admin'],
+                'student_id' => ['required_if:role,student', 'string', 'unique:students,student_id'],
+                'lecturer_id' => ['required_if:role,lecturer', 'string', 'unique:lecturers,lecturer_id'],
             ]);
-        } elseif ($request->role === 'lecturer') {
-            Lecturer::create([
-                'user_id' => $user->id,
-                'lecturer_id' => $request->lecturer_id,
-            ]);
+
+            DB::beginTransaction();
+
+            try {
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                    'role' => $validated['role'],
+                ]);
+
+                // Create associated role model
+                if ($validated['role'] === 'student') {
+                    Student::create([
+                        'user_id' => $user->id,
+                        'student_id' => $validated['student_id'],
+                    ]);
+                } elseif ($validated['role'] === 'lecturer') {
+                    Lecturer::create([
+                        'user_id' => $user->id,
+                        'lecturer_id' => $validated['lecturer_id'],
+                    ]);
+                }
+
+                DB::commit();
+                return redirect()->route('users.index')
+                    ->with('success', 'User created successfully.');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Error creating user: ' . $e->getMessage()]);
         }
-
-        return redirect()->route('users.index')
-            ->with('success', 'User created successfully.');
     }
 
     public function update(Request $request, User $user)
@@ -75,35 +94,42 @@ class UserController extends Controller
                 ->with('error', 'Unauthorized action.');
         }
 
-        $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'password' => $request->password ? [Rules\Password::defaults()] : [],
             'role' => ['required', 'string', 'in:student,lecturer,admin'],
-            'student_id' => [
-                'required_if:role,student',
-                'string',
-                'unique:students,student_id,' . ($user->student->id ?? 'NULL') . ',id',
-            ],
-            'lecturer_id' => [
-                'required_if:role,lecturer',
-                'string',
-                'unique:lecturers,lecturer_id,' . ($user->lecturer->id ?? 'NULL') . ',id',
-            ],
-        ]);
+        ];
+
+        // Only validate password if it's provided
+        if ($request->filled('password')) {
+            $rules['password'] = Rules\Password::defaults();
+        }
+
+        // Only validate student_id if changing to student role
+        if ($request->role === 'student' && $user->role !== 'student') {
+            $rules['student_id'] = ['required', 'string', 'unique:students,student_id'];
+        }
+
+        // Only validate lecturer_id if changing to lecturer role
+        if ($request->role === 'lecturer' && $user->role !== 'lecturer') {
+            $rules['lecturer_id'] = ['required', 'string', 'unique:lecturers,lecturer_id'];
+        }
+
+        $request->validate($rules);
 
         $user->name = $request->name;
         $user->email = $request->email;
-        if ($request->password) {
+        
+        if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
 
         // Handle role change
         if ($user->role !== $request->role) {
             // Remove old role model
-            if ($user->role === 'student') {
+            if ($user->role === 'student' && $user->student) {
                 $user->student()->delete();
-            } elseif ($user->role === 'lecturer') {
+            } elseif ($user->role === 'lecturer' && $user->lecturer) {
                 $user->lecturer()->delete();
             }
 
@@ -142,9 +168,9 @@ class UserController extends Controller
         }
 
         // Delete associated role model
-        if ($user->role === 'student') {
+        if ($user->role === 'student' && $user->student) {
             $user->student()->delete();
-        } elseif ($user->role === 'lecturer') {
+        } elseif ($user->role === 'lecturer' && $user->lecturer) {
             $user->lecturer()->delete();
         }
 

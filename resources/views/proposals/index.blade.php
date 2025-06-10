@@ -2,38 +2,51 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Tab Navigation -->
-            @if(Auth::user()->role !== 'admin')
             <div class="mb-4 border-b border-gray-200">
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
-                    <li class="me-2">
-                        <a href="{{ route('dashboard') }}" 
-                           class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'available' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
-                            {{ __('ĐỀ TÀI NGHIÊN CỨU') }}
-                        </a>
-                    </li>
-                    <li class="me-2">
-                        <a href="{{ route('my-topics') }}"
-                           class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'my-topics' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
-                            {{ __('ĐANG THAM GIA') }}
-                        </a>
-                    </li>
-                    @if(Auth::user()->role === 'student')
-                    <li class="me-2">
-                        <a href="{{ route('find-supervisor') }}"
-                           class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'lecturers' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
-                            {{ __('TÌM GIẢNG VIÊN') }}
-                        </a>
-                    </li>
+                    @if(Auth::user()->role === 'admin')
+                        <li class="me-2">
+                            <a href="{{ route('dashboard') }}" 
+                               class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'available' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
+                                {{ __('ĐỀ TÀI NGHIÊN CỨU') }}
+                            </a>
+                        </li>
+                        <li class="me-2">
+                            <a href="{{ route('users.index') }}"
+                               class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'users' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
+                                {{ __('QUẢN LÝ NGƯỜI DÙNG') }}
+                            </a>
+                        </li>
+                    @else
+                        <li class="me-2">
+                            <a href="{{ route('dashboard') }}" 
+                               class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'available' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
+                                {{ __('ĐỀ TÀI NGHIÊN CỨU') }}
+                            </a>
+                        </li>
+                        <li class="me-2">
+                            <a href="{{ route('my-topics') }}"
+                               class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'my-topics' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
+                                {{ __('ĐANG THAM GIA') }}
+                            </a>
+                        </li>
+                        @if(Auth::user()->role === 'student')
+                        <li class="me-2">
+                            <a href="{{ route('find-supervisor') }}"
+                               class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'lecturers' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
+                                {{ __('TÌM GIẢNG VIÊN') }}
+                            </a>
+                        </li>
+                        @endif
+                        <li class="me-2">
+                            <a href="{{ route('my-invitations') }}"
+                               class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'invitations' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
+                                {{ Auth::user()->role === 'lecturer' ? __('LỜI MỜI HƯỚNG DẪN') : __('YÊU CẦU THAM GIA') }}
+                            </a>
+                        </li>
                     @endif
-                    <li class="me-2">
-                        <a href="{{ route('my-invitations') }}"
-                           class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'invitations' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
-                            {{ Auth::user()->role === 'lecturer' ? __('LỜI MỜI HƯỚNG DẪN') : __('YÊU CẦU THAM GIA') }}
-                        </a>
-                    </li>
                 </ul>
             </div>
-            @endif
 
             <!-- Tab Contents -->
             <div>

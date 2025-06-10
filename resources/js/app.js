@@ -1,7 +1,15 @@
 import './bootstrap';
 
-import Alpine from 'alpinejs';
+import Alpine from 'alpinejs'
+import focus from '@alpinejs/focus'
 
-window.Alpine = Alpine;
+// Install the focus plugin
+Alpine.plugin(focus)
 
-Alpine.start();
+// Make Alpine available globally
+window.Alpine = Alpine
+
+// Initialize Alpine after all plugins are registered
+document.addEventListener('DOMContentLoaded', () => {
+    Alpine.start()
+})
