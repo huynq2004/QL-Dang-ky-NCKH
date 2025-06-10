@@ -143,33 +143,41 @@ class ProposalController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $user = Auth::user();
+        
+        // Common validation rules
+        $rules = [
             'title' => 'required|string|max:255',
             'field' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'lecturer_id' => 'required|exists:lecturers,id',
-            'message' => 'nullable|string|max:500'
-        ]);
+        ];
 
-        $user = Auth::user();
-        
+        // Add role-specific validation rules
+        if ($user->role === 'student') {
+            $rules['lecturer_id'] = 'required|exists:lecturers,id';
+            $rules['message'] = 'nullable|string|max:500';
+        }
+
+        $request->validate($rules);
+
         $proposal = new Proposal();
         $proposal->title = $request->title;
         $proposal->field = $request->field;
         $proposal->description = $request->description;
-        $proposal->lecturer_id = $request->lecturer_id;
         
         if ($user->role === 'student') {
             $proposal->student_id = $user->student->id;
+            $proposal->lecturer_id = $request->lecturer_id;
             $proposal->status = 'draft';
         } else {
+            $proposal->lecturer_id = $user->lecturer->id;
             $proposal->status = 'active';
         }
         
         $proposal->save();
 
         if ($user->role === 'student') {
-            // Create invitation
+            // Create invitation for student's proposal
             Invitation::create([
                 'student_id' => $user->student->id,
                 'lecturer_id' => $request->lecturer_id,
@@ -179,11 +187,11 @@ class ProposalController extends Controller
             ]);
 
             return redirect()->route('dashboard')
-                ->with('success', 'Research topic has been created and a request has been sent to the supervisor. Please wait for their response.');
+                ->with('success', 'Đề tài nghiên cứu đã được tạo và yêu cầu đã được gửi đến giảng viên. Vui lòng chờ phản hồi.');
         }
 
         return redirect()->route('dashboard')
-            ->with('success', 'Research topic created successfully.');
+            ->with('success', 'Đề tài nghiên cứu đã được tạo thành công.');
     }
 
     public function update(Request $request, Proposal $proposal)

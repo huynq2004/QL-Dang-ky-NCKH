@@ -3,6 +3,10 @@
     <form method="POST" action="{{ route('proposals.store') }}" class="p-6">
         @csrf
 
+        <h2 class="text-lg font-medium text-gray-900 mb-4">
+            {{ __('Tạo đề tài nghiên cứu') }}
+        </h2>
+
         <!-- Title -->
         <div class="mt-4">
             <x-input-label for="title" :value="__('Tiêu đề đề tài nghiên cứu')" />
@@ -24,14 +28,11 @@
             <x-input-error :messages="$errors->newProposal->get('description')" class="mt-2" />
         </div>
 
-        <!-- Status -->
-        <div class="mt-4">
-            <x-input-label for="status" :value="__('Trạng thái')" />
-            <select id="status" name="status" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                <option value="draft">{{ __('Nháp') }}</option>
-                <option value="active">{{ __('Hoạt động') }}</option>
-            </select>
-            <x-input-error :messages="$errors->newProposal->get('status')" class="mt-2" />
+        <!-- Information Note -->
+        <div class="mt-6 p-4 bg-blue-50 rounded-md">
+            <p class="text-sm text-blue-600">
+                {{ __('Lưu ý: Đề tài nghiên cứu sẽ được tạo ở trạng thái hoạt động và sẵn sàng cho sinh viên đăng ký.') }}
+            </p>
         </div>
 
         <div class="mt-6 flex justify-end">
