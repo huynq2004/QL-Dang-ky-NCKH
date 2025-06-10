@@ -202,4 +202,37 @@ class ProposalService implements ProposalServiceInterface
             throw $e;
         }
     }
+
+    /**
+     * Update proposal and notify related users
+     * 
+     * @param Proposal $proposal
+     * @param array $data
+     * @return Proposal
+     */
+    public function updateProposalAndNotify(Proposal $proposal, array $data): Proposal
+    {
+        DB::beginTransaction();
+        try {
+            $proposal->update($data);
+
+            // Notify students who have accepted invitations for this proposal
+            $acceptedInvitations = $proposal->invitations()
+                ->where('status', 'accepted')
+                ->with('student.user')
+                ->get();
+
+            foreach ($acceptedInvitations as $invitation) {
+                // Here you can add notification logic
+                // For example using Laravel's notification system:
+                // $invitation->student->user->notify(new ProposalUpdatedNotification($proposal));
+            }
+
+            DB::commit();
+            return $proposal;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
 } 
