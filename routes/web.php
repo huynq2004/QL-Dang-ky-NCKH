@@ -27,9 +27,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/invitations/{invitation}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
     Route::post('/invitations/{invitation}/reject', [InvitationController::class, 'reject'])->name('invitations.reject');
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [UserController::class, 'viewProfile'])->name('profile.view');
+    Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');
+    Route::patch('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
+    Route::delete('/profile', [UserController::class, 'destroyProfile'])->name('profile.destroy');
 
     // User management routes (for admin)
     Route::resource('users', UserController::class);
