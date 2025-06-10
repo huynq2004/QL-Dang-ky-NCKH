@@ -10,6 +10,7 @@ class Lecturer extends Model
 {
     protected $fillable = [
         'user_id',
+        'lecturer_id',
         'department',
         'title',
         'specialization',

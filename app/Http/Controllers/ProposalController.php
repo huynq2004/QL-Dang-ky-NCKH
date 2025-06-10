@@ -36,13 +36,21 @@ class ProposalController extends Controller
         $data = [
             'activeTab' => 'available',
             'proposals' => Proposal::where('status', '!=', 'draft')->get(),
-            'studentProposals' => $user->role === 'student' ? ProposalFacade::getStudentProposals($user->student) : collect(),
-            'invitations' => $user->role === 'student' 
-                ? ProposalFacade::getStudentInvitations($user->student)
-                : Invitation::where('lecturer_id', $user->lecturer->id)->get(),
-            'lecturers' => $user->role === 'student' ? ProposalFacade::getAvailableLecturers() : collect(),
-            'lecturerProposals' => $user->role === 'lecturer' ? Proposal::where('lecturer_id', $user->lecturer->id)->get() : collect()
+            'studentProposals' => collect(),
+            'invitations' => collect(),
+            'lecturers' => collect(),
+            'lecturerProposals' => collect()
         ];
+
+        if ($user->role === 'student') {
+            $data['studentProposals'] = ProposalFacade::getStudentProposals($user->student);
+            $data['invitations'] = ProposalFacade::getStudentInvitations($user->student);
+            $data['lecturers'] = ProposalFacade::getAvailableLecturers();
+        } elseif ($user->role === 'lecturer') {
+            $data['invitations'] = Invitation::where('lecturer_id', $user->lecturer->id)->get();
+            $data['lecturerProposals'] = Proposal::where('lecturer_id', $user->lecturer->id)->get();
+        }
+        // Admin can see all proposals without additional filtering
 
         return view('proposals.index', $data);
     }
@@ -53,13 +61,21 @@ class ProposalController extends Controller
         $data = [
             'activeTab' => 'my-topics',
             'proposals' => Proposal::where('status', '!=', 'draft')->get(),
-            'studentProposals' => $user->role === 'student' ? ProposalFacade::getStudentProposals($user->student) : collect(),
-            'invitations' => $user->role === 'student' 
-                ? ProposalFacade::getStudentInvitations($user->student)
-                : Invitation::where('lecturer_id', $user->lecturer->id)->get(),
-            'lecturers' => $user->role === 'student' ? ProposalFacade::getAvailableLecturers() : collect(),
-            'lecturerProposals' => $user->role === 'lecturer' ? Proposal::where('lecturer_id', $user->lecturer->id)->get() : collect()
+            'studentProposals' => collect(),
+            'invitations' => collect(),
+            'lecturers' => collect(),
+            'lecturerProposals' => collect()
         ];
+
+        if ($user->role === 'student') {
+            $data['studentProposals'] = ProposalFacade::getStudentProposals($user->student);
+            $data['invitations'] = ProposalFacade::getStudentInvitations($user->student);
+            $data['lecturers'] = ProposalFacade::getAvailableLecturers();
+        } elseif ($user->role === 'lecturer') {
+            $data['invitations'] = Invitation::where('lecturer_id', $user->lecturer->id)->get();
+            $data['lecturerProposals'] = Proposal::where('lecturer_id', $user->lecturer->id)->get();
+        }
+        // Admin can see all proposals without additional filtering
 
         return view('proposals.index', $data);
     }
@@ -162,11 +178,11 @@ class ProposalController extends Controller
                 'status' => 'pending'
             ]);
 
-            return redirect()->route('my-topics')
+            return redirect()->route('dashboard')
                 ->with('success', 'Research topic has been created and a request has been sent to the supervisor. Please wait for their response.');
         }
 
-        return redirect()->route('my-topics')
+        return redirect()->route('dashboard')
             ->with('success', 'Research topic created successfully.');
     }
 
@@ -187,7 +203,7 @@ class ProposalController extends Controller
 
         $this->proposalService->updateProposal($proposal, $validated);
 
-        return redirect()->route('my-topics')->with('success', 'Research topic updated successfully.');
+        return redirect()->route('dashboard')->with('success', 'Research topic updated successfully.');
     }
 
     public function destroy(Proposal $proposal)
@@ -200,13 +216,15 @@ class ProposalController extends Controller
 
         ProposalFacade::deleteProposal($proposal);
 
-        return redirect()->route('proposals.index')->with('success', 'Proposal deleted successfully.');
+        return redirect()->route('dashboard')->with('success', 'Proposal deleted successfully.');
     }
 
     public function invitations()
     {
         $user = Auth::user();
-        if ($user->role === 'student') {
+        if ($user->role === 'admin') {
+            $invitations = Invitation::all();
+        } elseif ($user->role === 'student') {
             $invitations = Invitation::where('student_id', $user->student->id)->get();
         } else {
             $invitations = Invitation::where('lecturer_id', $user->lecturer->id)->get();
@@ -295,12 +313,12 @@ class ProposalController extends Controller
             'proposal_id' => $proposal->id
         ]);
 
-        return redirect()->route('proposals.index')->with('success', 'Invitation sent successfully.');
+        return redirect()->route('dashboard')->with('success', 'Invitation sent successfully.');
     }
 
     public function sendInvitation(Proposal $proposal)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
         if ($user->role !== 'student') {
             abort(403);
@@ -324,12 +342,12 @@ class ProposalController extends Controller
             'status' => 'pending'
         ]);
 
-        return redirect()->back()->with('success', 'Invitation sent successfully.');
+        return redirect()->route('dashboard')->with('success', 'Invitation sent successfully.');
     }
 
     public function withdrawInvitation(Invitation $invitation)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
         if ($user->role !== 'student' || $invitation->student_id !== $user->student->id) {
             abort(403);
@@ -341,7 +359,7 @@ class ProposalController extends Controller
 
         $invitation->delete();
 
-        return redirect()->back()->with('success', 'Invitation withdrawn successfully.');
+        return redirect()->route('dashboard')->with('success', 'Invitation withdrawn successfully.');
     }
 
     public function requestToJoin(Proposal $proposal)

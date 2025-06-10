@@ -2,6 +2,7 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Tab Navigation -->
+            @if(Auth::user()->role !== 'admin')
             <div class="mb-4 border-b border-gray-200">
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                     <li class="me-2">
@@ -32,6 +33,7 @@
                     </li>
                 </ul>
             </div>
+            @endif
 
             <!-- Tab Contents -->
             <div>
