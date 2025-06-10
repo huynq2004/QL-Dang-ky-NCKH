@@ -104,71 +104,127 @@
 
     <!-- Create User Modal -->
     <x-modal name="create-user" focusable>
-        <form method="POST" action="{{ route('users.store') }}" class="p-6" x-data="{ role: '{{ old('role', 'student') }}' }">
+        <form method="POST" action="{{ route('users.store') }}" class="p-6" 
+            x-data="{ 
+                role: '{{ old('role', 'student') }}',
+                name: '',
+                email: '',
+                password: '',
+                password_confirmation: '',
+                student_id: '',
+                lecturer_id: '',
+                errors: {
+                    name: '',
+                    email: '',
+                    password: '',
+                    password_confirmation: '',
+                    student_id: '',
+                    lecturer_id: ''
+                },
+                validateForm() {
+                    let isValid = true;
+                    this.errors = {
+                        name: '',
+                        email: '',
+                        password: '',
+                        password_confirmation: '',
+                        student_id: '',
+                        lecturer_id: ''
+                    };
+
+                    if (!this.name) {
+                        this.errors.name = 'Vui lòng nhập họ và tên';
+                        isValid = false;
+                    }
+
+                    if (!this.email) {
+                        this.errors.email = 'Vui lòng nhập email';
+                        isValid = false;
+                    } else if (!this.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                        this.errors.email = 'Email không hợp lệ';
+                        isValid = false;
+                    }
+
+                    if (!this.password) {
+                        this.errors.password = 'Vui lòng nhập mật khẩu';
+                        isValid = false;
+                    } else if (this.password.length < 8) {
+                        this.errors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
+                        isValid = false;
+                    }
+
+                    if (!this.password_confirmation) {
+                        this.errors.password_confirmation = 'Vui lòng xác nhận mật khẩu';
+                        isValid = false;
+                    } else if (this.password !== this.password_confirmation) {
+                        this.errors.password_confirmation = 'Mật khẩu xác nhận không khớp';
+                        isValid = false;
+                    }
+
+                    if (this.role === 'student' && !this.student_id) {
+                        this.errors.student_id = 'Vui lòng nhập mã sinh viên';
+                        isValid = false;
+                    }
+
+                    if (this.role === 'lecturer' && !this.lecturer_id) {
+                        this.errors.lecturer_id = 'Vui lòng nhập mã giảng viên';
+                        isValid = false;
+                    }
+
+                    return isValid;
+                }
+            }"
+            @submit.prevent="if (validateForm()) $el.submit();"
+        >
             @csrf
 
             <h2 class="text-lg font-medium text-gray-900">
                 {{ __('Thêm người dùng mới') }}
             </h2>
 
-            @if ($errors->any())
-                <div class="mb-4">
-                    <div class="font-medium text-red-600">
-                        {{ __('Đã xảy ra lỗi!') }}
-                    </div>
-
-                    <ul class="mt-3 list-disc list-inside text-sm text-red-600">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
             <div class="mt-6">
                 <x-input-label for="name" :value="__('Họ và tên')" />
-                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" required :value="old('name')" />
-                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" x-model="name" />
+                <p class="mt-2 text-sm text-red-600" x-text="errors.name" x-show="errors.name"></p>
             </div>
 
             <div class="mt-6">
                 <x-input-label for="email" :value="__('Email')" />
-                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" required :value="old('email')" />
-                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" x-model="email" />
+                <p class="mt-2 text-sm text-red-600" x-text="errors.email" x-show="errors.email"></p>
             </div>
 
             <div class="mt-6">
                 <x-input-label for="role" :value="__('Vai trò')" />
                 <select id="role" name="role" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" x-model="role">
-                    <option value="student" {{ old('role') === 'student' ? 'selected' : '' }}>Sinh viên</option>
-                    <option value="lecturer" {{ old('role') === 'lecturer' ? 'selected' : '' }}>Giảng viên</option>
-                    <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Quản trị viên</option>
+                    <option value="student">Sinh viên</option>
+                    <option value="lecturer">Giảng viên</option>
+                    <option value="admin">Quản trị viên</option>
                 </select>
-                <x-input-error :messages="$errors->get('role')" class="mt-2" />
             </div>
 
             <div class="mt-6" x-show="role === 'student'">
                 <x-input-label for="student_id" :value="__('Mã sinh viên')" />
-                <x-text-input id="student_id" name="student_id" type="text" class="mt-1 block w-full" :value="old('student_id')" x-bind:required="role === 'student'" />
-                <x-input-error :messages="$errors->get('student_id')" class="mt-2" />
+                <x-text-input id="student_id" name="student_id" type="text" class="mt-1 block w-full" x-model="student_id" />
+                <p class="mt-2 text-sm text-red-600" x-text="errors.student_id" x-show="errors.student_id"></p>
             </div>
 
             <div class="mt-6" x-show="role === 'lecturer'">
                 <x-input-label for="lecturer_id" :value="__('Mã giảng viên')" />
-                <x-text-input id="lecturer_id" name="lecturer_id" type="text" class="mt-1 block w-full" :value="old('lecturer_id')" x-bind:required="role === 'lecturer'" />
-                <x-input-error :messages="$errors->get('lecturer_id')" class="mt-2" />
+                <x-text-input id="lecturer_id" name="lecturer_id" type="text" class="mt-1 block w-full" x-model="lecturer_id" />
+                <p class="mt-2 text-sm text-red-600" x-text="errors.lecturer_id" x-show="errors.lecturer_id"></p>
             </div>
 
             <div class="mt-6">
                 <x-input-label for="password" :value="__('Mật khẩu')" />
-                <x-text-input id="password" name="password" type="password" class="mt-1 block w-full" required />
-                <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                <x-text-input id="password" name="password" type="password" class="mt-1 block w-full" x-model="password" />
+                <p class="mt-2 text-sm text-red-600" x-text="errors.password" x-show="errors.password"></p>
             </div>
 
             <div class="mt-6">
                 <x-input-label for="password_confirmation" :value="__('Xác nhận mật khẩu')" />
-                <x-text-input id="password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full" required />
-                <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                <x-text-input id="password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full" x-model="password_confirmation" />
+                <p class="mt-2 text-sm text-red-600" x-text="errors.password_confirmation" x-show="errors.password_confirmation"></p>
             </div>
 
             <div class="mt-6 flex justify-end">
