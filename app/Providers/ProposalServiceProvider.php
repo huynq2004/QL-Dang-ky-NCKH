@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\ProposalService;
-use App\Contracts\ProposalServiceInterface;
+use App\Services\InvitationService;
 
 class ProposalServiceProvider extends ServiceProvider
 {
@@ -14,10 +14,10 @@ class ProposalServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind('proposal', function ($app) {
-            return new ProposalService();
+            return new ProposalService(
+                $app->make(InvitationService::class)
+            );
         });
-
-        $this->app->bind(ProposalServiceInterface::class, ProposalService::class);
     }
 
     /**

@@ -37,4 +37,12 @@ interface ProposalServiceInterface
     public function getActiveStudentsCount(Lecturer $lecturer): int;
     
     public function createInvitation(array $data): Invitation;
+
+    /**
+     * Submit a proposal and create an invitation
+     * 
+     * @param array $data
+     * @return mixed
+     */
+    public function submitProposalWithInvitation(array $data);
 } 

@@ -10,9 +10,18 @@ use App\Models\User;
 use App\Contracts\ProposalServiceInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use App\Services\InvitationService;
+use Illuminate\Support\Facades\DB;
 
 class ProposalService implements ProposalServiceInterface
 {
+    protected $invitationService;
+
+    public function __construct(InvitationService $invitationService)
+    {
+        $this->invitationService = $invitationService;
+    }
+
     public function getProposals(): Collection
     {
         // Chỉ hiển thị đề tài active cho tất cả người dùng
@@ -163,5 +172,34 @@ class ProposalService implements ProposalServiceInterface
         return Lecturer::with('user')
             ->where('status', 'active')
             ->get();
+    }
+
+    /**
+     * Submit a proposal and create an invitation
+     * 
+     * @param array $data
+     * @return mixed
+     */
+    public function submitProposalWithInvitation(array $data)
+    {
+        DB::beginTransaction();
+        try {
+            $proposal = Proposal::create($data);
+            
+            if (isset($data['student_id']) && isset($data['lecturer_id'])) {
+                $this->invitationService->createInvitation([
+                    'student_id' => $data['student_id'],
+                    'lecturer_id' => $data['lecturer_id'],
+                    'proposal_id' => $proposal->id,
+                    'status' => 'pending'
+                ]);
+            }
+
+            DB::commit();
+            return $proposal;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 } 
