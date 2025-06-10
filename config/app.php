@@ -145,6 +145,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\ProposalServiceProvider::class,
+        App\Providers\UserManagementServiceProvider::class,
     ])->toArray(),
 
 ];

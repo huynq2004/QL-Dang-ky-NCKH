@@ -3,12 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Student;
-use App\Models\Lecturer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use App\Facades\UserManagementFacade;
 
 class UserController extends Controller
 {
@@ -20,94 +16,54 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::paginate(10);
+        $users = UserManagementFacade::getAllUsers();
         return view('admin.users.index', compact('users'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'string', 'in:student,lecturer,admin'],
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:8',
+            'role' => 'required|string'
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-        ]);
-
-        // Create associated role model
-        if ($request->role === 'student') {
-            Student::create(['user_id' => $user->id]);
-        } elseif ($request->role === 'lecturer') {
-            Lecturer::create(['user_id' => $user->id]);
-        }
-
-        return redirect()->route('admin.users.index')
-            ->with('success', 'User created successfully.');
+        $user = UserManagementFacade::createUser($validated, $validated['role']);
+        return redirect()->route('admin.users.index')->with('success', 'User created successfully');
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'password' => $request->password ? ['confirmed', Rules\Password::defaults()] : [],
-            'role' => ['required', 'string', 'in:student,lecturer,admin'],
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'role' => 'sometimes|string'
         ]);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
-        if ($request->password) {
-            $user->password = Hash::make($request->password);
-        }
-
-        // Handle role change
-        if ($user->role !== $request->role) {
-            // Remove old role model
-            if ($user->role === 'student') {
-                $user->student()->delete();
-            } elseif ($user->role === 'lecturer') {
-                $user->lecturer()->delete();
-            }
-
-            // Create new role model
-            if ($request->role === 'student') {
-                Student::create(['user_id' => $user->id]);
-            } elseif ($request->role === 'lecturer') {
-                Lecturer::create(['user_id' => $user->id]);
-            }
-
-            $user->role = $request->role;
-        }
-
-        $user->save();
-
-        return redirect()->route('admin.users.index')
-            ->with('success', 'User updated successfully.');
+        $user = UserManagementFacade::updateUser($id, $validated);
+        return redirect()->route('admin.users.index')->with('success', 'User updated successfully');
     }
 
-    public function destroy(User $user)
+    public function destroy($id)
     {
-        if ($user->id === auth()->id()) {
-            return redirect()->route('admin.users.index')
-                ->with('error', 'You cannot delete your own account.');
-        }
+        UserManagementFacade::deleteUser($id);
+        return redirect()->route('admin.users.index')->with('success', 'User deleted successfully');
+    }
 
-        // Delete associated role model
-        if ($user->role === 'student') {
-            $user->student()->delete();
-        } elseif ($user->role === 'lecturer') {
-            $user->lecturer()->delete();
-        }
+    public function resetPassword($id)
+    {
+        UserManagementFacade::resetPassword($id);
+        return redirect()->route('admin.users.index')->with('success', 'Password has been reset');
+    }
 
-        $user->delete();
+    public function changeRole(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'role' => 'required|string'
+        ]);
 
-        return redirect()->route('admin.users.index')
-            ->with('success', 'User deleted successfully.');
+        UserManagementFacade::changeRole($id, $validated['role']);
+        return redirect()->route('admin.users.index')->with('success', 'Role updated successfully');
     }
 } 
