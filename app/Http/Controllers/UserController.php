@@ -35,37 +35,49 @@ class UserController extends Controller
                 ->with('error', 'Unauthorized action.');
         }
 
-        $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', Rules\Password::defaults()],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'string', 'in:student,lecturer,admin'],
-            'student_id' => ['required_if:role,student', 'string', 'unique:students,student_id'],
-            'lecturer_id' => ['required_if:role,lecturer', 'string', 'unique:lecturers,lecturer_id'],
-        ]);
+        ];
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-        ]);
-
-        // Create associated role model
-        if ($request->role === 'student') {
-            Student::create([
-                'user_id' => $user->id,
-                'student_id' => $request->student_id,
-            ]);
-        } elseif ($request->role === 'lecturer') {
-            Lecturer::create([
-                'user_id' => $user->id,
-                'lecturer_id' => $request->lecturer_id,
-            ]);
+        // Add role-specific validation rules
+        if ($request->input('role') === 'student') {
+            $rules['student_id'] = ['required', 'string', 'unique:students,student_id'];
+        } elseif ($request->input('role') === 'lecturer') {
+            $rules['lecturer_id'] = ['required', 'string', 'unique:lecturers,lecturer_id'];
         }
 
-        return redirect()->route('users.index')
-            ->with('success', 'User created successfully.');
+        try {
+            $validated = $request->validate($rules);
+
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => $validated['role'],
+            ]);
+
+            // Create associated role model
+            if ($validated['role'] === 'student') {
+                Student::create([
+                    'user_id' => $user->id,
+                    'student_id' => $validated['student_id'],
+                ]);
+            } elseif ($validated['role'] === 'lecturer') {
+                Lecturer::create([
+                    'user_id' => $user->id,
+                    'lecturer_id' => $validated['lecturer_id'],
+                ]);
+            }
+
+            return redirect()->route('users.index')
+                ->with('success', 'Người dùng đã được tạo thành công.');
+        } catch (\Exception $e) {
+            return back()->withInput()
+                ->withErrors(['error' => 'Có lỗi xảy ra khi tạo người dùng. Vui lòng thử lại.']);
+        }
     }
 
     public function update(Request $request, User $user)
