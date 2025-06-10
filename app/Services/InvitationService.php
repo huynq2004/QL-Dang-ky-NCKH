@@ -11,6 +11,13 @@ use Illuminate\Database\Eloquent\Collection;
 
 class InvitationService implements InvitationServiceInterface
 {
+    private const VALID_STATUSES = [
+        'pending',
+        'accepted',
+        'rejected',
+        'expired'
+    ];
+
     public function getInvitations(User $user): Collection
     {
         if ($user->role === 'lecturer') {
@@ -38,22 +45,41 @@ class InvitationService implements InvitationServiceInterface
 
     public function createInvitation(array $data): Invitation
     {
+        $data['status'] = $data['status'] ?? 'pending';
+        
+        if (!in_array($data['status'], self::VALID_STATUSES)) {
+            throw new \InvalidArgumentException('Invalid status value');
+        }
+
         return Invitation::create($data);
     }
 
     public function processInvitation(int $id, string $action): Invitation
     {
+        if (!in_array($action, self::VALID_STATUSES)) {
+            throw new \InvalidArgumentException('Invalid status value');
+        }
+
         $invitation = Invitation::findOrFail($id);
-        $invitation->status = $action;
-        $invitation->save();
+        $invitation->update(['status' => $action]);
+        
+        if ($action === 'accepted' && $invitation->proposal) {
+            $invitation->proposal->update(['status' => 'active']);
+        }
+
         return $invitation;
     }
 
     public function withdrawInvitation(int $id): void
     {
         $invitation = Invitation::findOrFail($id);
-        $invitation->status = 'withdrawn';
-        $invitation->save();
+        
+        // Chỉ cho phép thu hồi nếu trạng thái là pending
+        if ($invitation->status !== 'pending') {
+            throw new \InvalidArgumentException('Only pending invitations can be withdrawn');
+        }
+        
+        $invitation->delete();
     }
 
     public function canSendInvitation(Student $student, Lecturer $lecturer): bool

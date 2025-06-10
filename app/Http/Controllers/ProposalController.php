@@ -61,7 +61,7 @@ class ProposalController extends Controller
         $user = Auth::user();
         $data = [
             'activeTab' => 'my-topics',
-            'proposals' => ProposalFacade::getProposals(),
+            'proposals' => collect(),
             'studentProposals' => collect(),
             'invitations' => collect(),
             'lecturers' => collect(),
@@ -160,11 +160,20 @@ class ProposalController extends Controller
 
         $request->validate($rules);
 
-        $data = $request->only(['title', 'field', 'description', 'lecturer_id']);
-        $data['student_id'] = $user->role === 'student' ? $user->student->id : null;
-        $data['status'] = $user->role === 'student' ? 'draft' : 'active';
-
-        $proposal = ProposalFacade::submitProposalWithInvitation($data);
+        $data = $request->only(['title', 'field', 'description']);
+        
+        if ($user->role === 'student') {
+            $data['student_id'] = $user->student->id;
+            $data['lecturer_id'] = $request->lecturer_id;
+            $data['status'] = 'draft';
+            
+            $proposal = ProposalFacade::submitProposalWithInvitation($data);
+        } else {
+            $data['lecturer_id'] = $user->lecturer->id;
+            $data['status'] = 'active';
+            
+            $proposal = ProposalFacade::createProposal($data);
+        }
 
         return redirect()->route('dashboard')
             ->with('success', 'Đề tài nghiên cứu đã được tạo thành công.');
