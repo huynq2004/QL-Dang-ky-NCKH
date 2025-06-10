@@ -5,42 +5,42 @@
 
         <!-- Title -->
         <div class="mt-4">
-            <x-input-label for="title" :value="__('Research Title')" />
+            <x-input-label for="title" :value="__('Tiêu đề đề tài nghiên cứu')" />
             <x-text-input id="title" name="title" type="text" class="mt-1 block w-full" required />
             <x-input-error :messages="$errors->newProposal->get('title')" class="mt-2" />
         </div>
 
         <!-- Field -->
         <div class="mt-4">
-            <x-input-label for="field" :value="__('Research Field')" />
+            <x-input-label for="field" :value="__('Lĩnh vực nghiên cứu')" />
             <x-text-input id="field" name="field" type="text" class="mt-1 block w-full" required />
             <x-input-error :messages="$errors->newProposal->get('field')" class="mt-2" />
         </div>
 
         <!-- Description -->
         <div class="mt-4">
-            <x-input-label for="description" :value="__('Description')" />
+            <x-input-label for="description" :value="__('Mô tả')" />
             <x-textarea id="description" name="description" class="mt-1 block w-full" rows="4"></x-textarea>
             <x-input-error :messages="$errors->newProposal->get('description')" class="mt-2" />
         </div>
 
         <!-- Status -->
         <div class="mt-4">
-            <x-input-label for="status" :value="__('Status')" />
+            <x-input-label for="status" :value="__('Trạng thái')" />
             <select id="status" name="status" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                <option value="draft">{{ __('Draft') }}</option>
-                <option value="active">{{ __('Active') }}</option>
+                <option value="draft">{{ __('Nháp') }}</option>
+                <option value="active">{{ __('Hoạt động') }}</option>
             </select>
             <x-input-error :messages="$errors->newProposal->get('status')" class="mt-2" />
         </div>
 
         <div class="mt-6 flex justify-end">
             <x-secondary-button x-on:click="$dispatch('close')">
-                {{ __('Cancel') }}
+                {{ __('Hủy') }}
             </x-secondary-button>
 
             <x-primary-button class="ml-3">
-                {{ __('Create') }}
+                {{ __('Tạo') }}
             </x-primary-button>
         </div>
     </form>
@@ -55,31 +55,31 @@
 
         <!-- Title -->
         <div class="mt-4">
-            <x-input-label for="title" :value="__('Research Title')" />
+            <x-input-label for="title" :value="__('Tiêu đề đề tài nghiên cứu')" />
             <x-text-input id="title" name="title" type="text" class="mt-1 block w-full" :value="$proposal->title" required />
             <x-input-error :messages="$errors->{'edit-'.$proposal->id}->get('title')" class="mt-2" />
         </div>
 
         <!-- Field -->
         <div class="mt-4">
-            <x-input-label for="field" :value="__('Research Field')" />
+            <x-input-label for="field" :value="__('Lĩnh vực nghiên cứu')" />
             <x-text-input id="field" name="field" type="text" class="mt-1 block w-full" :value="$proposal->field" required />
             <x-input-error :messages="$errors->{'edit-'.$proposal->id}->get('field')" class="mt-2" />
         </div>
 
         <!-- Description -->
         <div class="mt-4">
-            <x-input-label for="description" :value="__('Description')" />
+            <x-input-label for="description" :value="__('Mô tả')" />
             <x-textarea id="description" name="description" class="mt-1 block w-full" rows="4">{{ $proposal->description }}</x-textarea>
             <x-input-error :messages="$errors->{'edit-'.$proposal->id}->get('description')" class="mt-2" />
         </div>
 
         <!-- Status -->
         <div class="mt-4">
-            <x-input-label for="status" :value="__('Status')" />
+            <x-input-label for="status" :value="__('Trạng thái')" />
             <select id="status" name="status" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                <option value="draft" {{ $proposal->status === 'draft' ? 'selected' : '' }}>{{ __('Draft') }}</option>
-                <option value="active" {{ $proposal->status === 'active' ? 'selected' : '' }}>{{ __('Active') }}</option>
+                <option value="draft" {{ $proposal->status === 'draft' ? 'selected' : '' }}>{{ __('Nháp') }}</option>
+                <option value="active" {{ $proposal->status === 'active' ? 'selected' : '' }}>{{ __('Hoạt động') }}</option>
                 <option value="completed" {{ $proposal->status === 'completed' ? 'selected' : '' }}>{{ __('Completed') }}</option>
                 <option value="cancelled" {{ $proposal->status === 'cancelled' ? 'selected' : '' }}>{{ __('Cancelled') }}</option>
             </select>
@@ -88,11 +88,11 @@
 
         <div class="mt-6 flex justify-end">
             <x-secondary-button x-on:click="$dispatch('close')">
-                {{ __('Cancel') }}
+                {{ __('Hủy') }}
             </x-secondary-button>
 
             <x-primary-button class="ml-3">
-                {{ __('Update') }}
+                {{ __('Cập nhật') }}
             </x-primary-button>
         </div>
     </form>
@@ -105,20 +105,20 @@
         @method('DELETE')
 
         <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Are you sure you want to delete this research topic?') }}
+            {{ __('Bạn có chắc chắn muốn xóa đề tài này không?') }}
         </h2>
 
         <p class="mt-1 text-sm text-gray-600">
-            {{ __('Once this research topic is deleted, all of its resources and data will be permanently deleted.') }}
+            {{ __('Sau khi xóa đề tài này, tất cả dữ liệu và tài nguyên liên quan sẽ bị xóa vĩnh viễn.') }}
         </p>
 
         <div class="mt-6 flex justify-end">
             <x-secondary-button x-on:click="$dispatch('close')">
-                {{ __('Cancel') }}
+                {{ __('Hủy') }}
             </x-secondary-button>
 
             <x-danger-button class="ml-3">
-                {{ __('Delete Research Topic') }}
+                {{ __('Xóa đề tài') }}
             </x-danger-button>
         </div>
     </form>

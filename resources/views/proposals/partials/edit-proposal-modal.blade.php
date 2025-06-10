@@ -3,7 +3,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editProposalModalLabel">Edit Research Proposal</h5>
+                <h5 class="modal-title" id="editProposalModalLabel">Sửa đề tài nghiên cứu</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editProposalForm" method="POST">
@@ -12,21 +12,21 @@
                 <input type="hidden" id="editProposalId" name="proposal_id">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="editTitle" class="form-label">Title</label>
+                        <label for="editTitle" class="form-label">Tiêu đề</label>
                         <input type="text" class="form-control" id="editTitle" name="title" required>
                     </div>
                     <div class="mb-3">
-                        <label for="editField" class="form-label">Research Field</label>
+                        <label for="editField" class="form-label">Lĩnh vực</label>
                         <input type="text" class="form-control" id="editField" name="field" required>
                     </div>
                     <div class="mb-3">
-                        <label for="editDescription" class="form-label">Description</label>
+                        <label for="editDescription" class="form-label">Mô tả</label>
                         <textarea class="form-control" id="editDescription" name="description" rows="3"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
                 </div>
             </form>
         </div>

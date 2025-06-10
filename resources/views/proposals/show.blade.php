@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Research Topic Details') }}
+            {{ __('Chi tiết đề tài nghiên cứu') }}
         </h2>
     </x-slot>
 
@@ -16,14 +16,14 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                         <div>
-                            <h3 class="font-semibold mb-2">{{ __('Supervisor') }}</h3>
+                            <h3 class="font-semibold mb-2">{{ __('Giảng viên') }}</h3>
                             <p>{{ $proposal->lecturer->user->name }}</p>
                             <p class="text-sm text-gray-600">{{ $proposal->lecturer->department }}</p>
                             <p class="text-sm text-gray-600">{{ $proposal->lecturer->title }}</p>
                         </div>
 
                         <div>
-                            <h3 class="font-semibold mb-2">{{ __('Status') }}</h3>
+                            <h3 class="font-semibold mb-2">{{ __('Trạng thái') }}</h3>
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                 {{ $proposal->status === 'active' ? 'bg-green-100 text-green-800' : 
                                    ($proposal->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
@@ -34,7 +34,7 @@
 
                     @if($proposal->description)
                         <div class="mb-6">
-                            <h3 class="font-semibold mb-2">{{ __('Description') }}</h3>
+                            <h3 class="font-semibold mb-2">{{ __('Mô tả') }}</h3>
                             <div class="prose max-w-none">
                                 {{ $proposal->description }}
                             </div>
@@ -43,7 +43,7 @@
 
                     <!-- Participating Students -->
                     <div class="mb-6">
-                        <h3 class="font-semibold mb-4">{{ __('Participating Students') }}</h3>
+                        <h3 class="font-semibold mb-4">{{ __('Sinh viên tham gia') }}</h3>
                         @php
                             $acceptedInvitations = $proposal->invitations->where('status', 'accepted');
                         @endphp
@@ -59,7 +59,7 @@
                                                     <p class="text-sm text-gray-500">{{ $invitation->student->student_id }}</p>
                                                 </div>
                                                 <div class="text-sm text-gray-500">
-                                                    {{ __('Joined: ') }} {{ $invitation->updated_at->format('d/m/Y') }}
+                                                    {{ __('Đã tham gia: ') }} {{ $invitation->updated_at->format('d/m/Y') }}
                                                 </div>
                                             </div>
                                         </li>
@@ -67,14 +67,14 @@
                                 </ul>
                             </div>
                         @else
-                            <p class="text-gray-500">{{ __('No students are currently participating in this research topic.') }}</p>
+                            <p class="text-gray-500">{{ __('Không có sinh viên nào tham gia đề tài này.') }}</p>
                         @endif
                     </div>
 
                     <!-- Pending Requests -->
                     @if(Auth::user()->role === 'lecturer' && Auth::user()->lecturer->id === $proposal->lecturer_id)
                         <div class="mb-6">
-                            <h3 class="font-semibold mb-4">{{ __('Pending Requests') }}</h3>
+                            <h3 class="font-semibold mb-4">{{ __('Yêu cầu chờ') }}</h3>
                             @php
                                 $pendingInvitations = $proposal->invitations->where('status', 'pending');
                             @endphp
@@ -93,13 +93,13 @@
                                                         <form action="{{ route('invitations.accept', $invitation) }}" method="POST" class="inline">
                                                             @csrf
                                                             <x-primary-button>
-                                                                {{ __('Accept') }}
+                                                                {{ __('Chấp nhận') }}
                                                             </x-primary-button>
                                                         </form>
                                                         <form action="{{ route('invitations.reject', $invitation) }}" method="POST" class="inline">
                                                             @csrf
                                                             <x-danger-button>
-                                                                {{ __('Reject') }}
+                                                                {{ __('Từ chối') }}
                                                             </x-danger-button>
                                                         </form>
                                                     </div>
@@ -109,27 +109,27 @@
                                     </ul>
                                 </div>
                             @else
-                                <p class="text-gray-500">{{ __('No pending requests.') }}</p>
+                                <p class="text-gray-500">{{ __('Không có yêu cầu chờ.') }}</p>
                             @endif
                         </div>
                     @endif
 
                     <div class="mt-6 flex justify-between">
                         <a href="{{ url()->previous() }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                            {{ __('Back') }}
+                            {{ __('Quay lại') }}
                         </a>
 
                         @if(isset($canRequest) && $canRequest)
                             <form action="{{ route('proposals.request', $proposal) }}" method="POST" class="inline">
                                 @csrf
                                 <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500">
-                                    {{ __('Request to Join') }}
+                                    {{ __('Yêu cầu tham gia') }}
                                 </button>
                             </form>
                         @elseif(isset($existingRequest))
                             <div class="flex items-center">
                                 <span class="text-sm text-gray-600 mr-4">
-                                    {{ __('Request Status:') }}
+                                    {{ __('Trạng thái yêu cầu:') }}
                                     <span class="font-semibold">{{ ucfirst($existingRequest->status) }}</span>
                                 </span>
                                 
@@ -138,7 +138,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500">
-                                            {{ __('Withdraw Request') }}
+                                            {{ __('Thu hồi yêu cầu') }}
                                         </button>
                                     </form>
                                 @endif

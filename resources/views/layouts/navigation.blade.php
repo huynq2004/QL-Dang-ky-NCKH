@@ -13,7 +13,7 @@
                 <!-- School Name and System Title -->
                 <div class="flex items-center ms-6">
                     <div class="text-gray-800">
-                        <h1 class="text-xl font-bold">Trường Đại học Thủy lợi</h1>
+                        <h1 class="text-xl font-bold">TRƯỜNG ĐẠI HỌC THỦY LỢI</h1>
                         <h2 class="text-lg">Nghiên cứu khoa học sinh viên</h2>
                     </div>
                 </div>
