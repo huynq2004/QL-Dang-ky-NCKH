@@ -15,19 +15,33 @@ class ProposalService implements ProposalServiceInterface
 {
     public function getProposals(): Collection
     {
-        $user = Auth::user();
+        // Chỉ hiển thị đề tài active cho tất cả người dùng
+        return Proposal::with(['lecturer.user', 'student.user'])
+            ->where('status', 'active')
+            ->get();
+    }
 
-        if ($user->role === 'lecturer') {
-            return Proposal::with('lecturer.user')
-                ->where('lecturer_id', $user->lecturer->id)
-                ->get();
-        } elseif ($user->role === 'student') {
-            return Proposal::with('lecturer.user')
-                ->where('status', 'active')
-                ->get();
-        }
-
-        return Proposal::with('lecturer.user')->get();
+    public function getLecturerProposals(Lecturer $lecturer): Collection
+    {
+        // Lấy tất cả đề tài liên quan đến giảng viên
+        return Proposal::with(['lecturer.user', 'student.user', 'invitations'])
+            ->where(function($query) use ($lecturer) {
+                // Điều kiện 1: Đề tài do giảng viên tạo VÀ không có bất kỳ lời mời nào
+                $query->where('lecturer_id', $lecturer->id)
+                    ->whereDoesntHave('invitations')
+                    // HOẶC
+                    ->orWhere(function($subQuery) use ($lecturer) {
+                        // Điều kiện 2: Đề tài mà giảng viên được mời VÀ đã chấp nhận
+                        $subQuery->whereHas('invitations', function($invitationQuery) use ($lecturer) {
+                            $invitationQuery->where([
+                                'lecturer_id' => $lecturer->id,
+                                'status' => 'accepted'
+                            ]);
+                        });
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 
     public function getInvitations(User $user): Collection
@@ -53,11 +67,6 @@ class ProposalService implements ProposalServiceInterface
             ->where('student_id', $student->id)
             ->orderBy('created_at', 'desc')
             ->get();
-    }
-
-    public function getLecturerProposals(Lecturer $lecturer): Collection
-    {
-        return Proposal::where('lecturer_id', $lecturer->id)->get();
     }
 
     public function canSendInvitation(Student $student, Lecturer $lecturer): bool

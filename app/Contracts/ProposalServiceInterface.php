@@ -13,9 +13,11 @@ interface ProposalServiceInterface
 {
     // Proposal methods
     public function getProposals(): Collection;
+    public function getLecturerProposals(Lecturer $lecturer): Collection;
     public function createProposal(array $data): Proposal;
     public function updateProposal(Proposal $proposal, array $data): Proposal;
     public function deleteProposal(Proposal $proposal): bool;
+    public function getStudentProposals(Student $student): Collection;
     
     // Invitation methods
     public function getInvitations(User $user): Collection;
@@ -25,8 +27,6 @@ interface ProposalServiceInterface
     public function autoProcessExpiredInvitations(): void;
     
     public function withdrawInvitation(int $id): void;
-    
-    public function getLecturerProposals(Lecturer $lecturer): Collection;
     
     public function getStudentInvitations(Student $student): Collection;
     

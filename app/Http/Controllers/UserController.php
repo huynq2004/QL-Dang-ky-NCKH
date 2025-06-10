@@ -87,31 +87,38 @@ class UserController extends Controller
                 ->with('error', 'Unauthorized action.');
         }
 
-        $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => $request->password ? [Rules\Password::defaults()] : [],
             'role' => ['required', 'string', 'in:student,lecturer,admin'],
-            'student_id' => [
-                'required_if:role,student',
-                'string',
-                'unique:students,student_id,' . ($user->student->id ?? 'NULL') . ',id',
-            ],
-            'lecturer_id' => [
-                'required_if:role,lecturer',
-                'string',
-                'unique:lecturers,lecturer_id,' . ($user->lecturer->id ?? 'NULL') . ',id',
-            ],
-        ]);
+        ];
 
-        $user->name = $request->name;
-        $user->email = $request->email;
+        // Add role-specific validation rules
+        if ($request->role === 'student') {
+            $rules['student_id'] = [
+                'required',
+                'string',
+                'unique:students,student_id,' . ($user->student->id ?? 'NULL') . ',id'
+            ];
+        } elseif ($request->role === 'lecturer') {
+            $rules['lecturer_id'] = [
+                'required',
+                'string',
+                'unique:lecturers,lecturer_id,' . ($user->lecturer->id ?? 'NULL') . ',id'
+            ];
+        }
+
+        $validated = $request->validate($rules);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
         if ($request->password) {
             $user->password = Hash::make($request->password);
         }
 
         // Handle role change
-        if ($user->role !== $request->role) {
+        if ($user->role !== $validated['role']) {
             // Remove old role model
             if ($user->role === 'student') {
                 $user->student()->delete();
@@ -120,25 +127,32 @@ class UserController extends Controller
             }
 
             // Create new role model
-            if ($request->role === 'student') {
+            if ($validated['role'] === 'student') {
                 Student::create([
                     'user_id' => $user->id,
-                    'student_id' => $request->student_id,
+                    'student_id' => $validated['student_id']
                 ]);
-            } elseif ($request->role === 'lecturer') {
+            } elseif ($validated['role'] === 'lecturer') {
                 Lecturer::create([
                     'user_id' => $user->id,
-                    'lecturer_id' => $request->lecturer_id,
+                    'lecturer_id' => $validated['lecturer_id']
                 ]);
             }
 
-            $user->role = $request->role;
+            $user->role = $validated['role'];
+        } else {
+            // Update existing role model if ID changed
+            if ($user->role === 'student' && isset($validated['student_id'])) {
+                $user->student->update(['student_id' => $validated['student_id']]);
+            } elseif ($user->role === 'lecturer' && isset($validated['lecturer_id'])) {
+                $user->lecturer->update(['lecturer_id' => $validated['lecturer_id']]);
+            }
         }
 
         $user->save();
 
         return redirect()->route('users.index')
-            ->with('success', 'User updated successfully.');
+            ->with('success', 'Thông tin người dùng đã được cập nhật thành công.');
     }
 
     public function destroy(User $user)

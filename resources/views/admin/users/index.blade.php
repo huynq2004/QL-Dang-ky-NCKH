@@ -251,7 +251,7 @@
                 </h2>
 
                 <div class="mt-6">
-                    <x-input-label for="name-{{ $user->id }}" :value="__('Name')" />
+                    <x-input-label for="name-{{ $user->id }}" :value="__('Họ và tên')" />
                     <x-text-input id="name-{{ $user->id }}" name="name" type="text" class="mt-1 block w-full" :value="$user->name" required />
                     <x-input-error :messages="$errors->get('name')" class="mt-2" />
                 </div>
@@ -263,7 +263,7 @@
                 </div>
 
                 <div class="mt-6">
-                    <x-input-label for="role-{{ $user->id }}" :value="__('Role')" />
+                    <x-input-label for="role-{{ $user->id }}" :value="__('Vai trò')" />
                     <select id="role-{{ $user->id }}" name="role" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" x-model="role">
                         <option value="student" {{ $user->role === 'student' ? 'selected' : '' }}>Sinh viên</option>
                         <option value="lecturer" {{ $user->role === 'lecturer' ? 'selected' : '' }}>Giảng viên</option>
@@ -272,37 +272,36 @@
                     <x-input-error :messages="$errors->get('role')" class="mt-2" />
                 </div>
 
-                @if($user->role === 'student' && $user->student)
-                    <div class="mt-6">
-                        <x-input-label for="student_id-{{ $user->id }}" :value="__('ID')" />
-                        <x-text-input id="student_id-{{ $user->id }}" type="text" class="mt-1 block w-full bg-gray-100" :value="$user->student->student_id" disabled />
-                    </div>
-                @elseif($user->role === 'lecturer' && $user->lecturer)
-                    <div class="mt-6">
-                        <x-input-label for="lecturer_id-{{ $user->id }}" :value="__('ID')" />
-                        <x-text-input id="lecturer_id-{{ $user->id }}" type="text" class="mt-1 block w-full bg-gray-100" :value="$user->lecturer->lecturer_id" disabled />
-                    </div>
-                @elseif($user->role === 'admin')
-                    <div class="mt-6">
-                        <x-input-label for="user_id-{{ $user->id }}" :value="__('ID')" />
-                        <x-text-input id="user_id-{{ $user->id }}" type="text" class="mt-1 block w-full bg-gray-100" :value="$user->id" disabled />
-                    </div>
-                @endif
-
-                <div class="mt-6" x-show="role === 'student' && '{{ $user->role }}' !== 'student'">
-                    <x-input-label for="student_id-new-{{ $user->id }}" :value="__('ID')" />
-                    <x-text-input id="student_id-new-{{ $user->id }}" name="student_id" type="text" class="mt-1 block w-full" required x-bind:required="role === 'student'" />
+                <!-- Student ID field - shown for current students or when changing to student -->
+                <div class="mt-6" x-show="role === 'student'">
+                    <x-input-label for="student_id-{{ $user->id }}" :value="__('Mã sinh viên')" />
+                    <x-text-input 
+                        id="student_id-{{ $user->id }}" 
+                        name="student_id" 
+                        type="text" 
+                        class="mt-1 block w-full" 
+                        :value="$user->student->student_id ?? ''"
+                        x-bind:required="role === 'student'"
+                    />
                     <x-input-error :messages="$errors->get('student_id')" class="mt-2" />
                 </div>
 
-                <div class="mt-6" x-show="role === 'lecturer' && '{{ $user->role }}' !== 'lecturer'">
-                    <x-input-label for="lecturer_id-new-{{ $user->id }}" :value="__('ID')" />
-                    <x-text-input id="lecturer_id-new-{{ $user->id }}" name="lecturer_id" type="text" class="mt-1 block w-full" required x-bind:required="role === 'lecturer'" />
+                <!-- Lecturer ID field - shown for current lecturers or when changing to lecturer -->
+                <div class="mt-6" x-show="role === 'lecturer'">
+                    <x-input-label for="lecturer_id-{{ $user->id }}" :value="__('Mã giảng viên')" />
+                    <x-text-input 
+                        id="lecturer_id-{{ $user->id }}" 
+                        name="lecturer_id" 
+                        type="text" 
+                        class="mt-1 block w-full" 
+                        :value="$user->lecturer->lecturer_id ?? ''"
+                        x-bind:required="role === 'lecturer'"
+                    />
                     <x-input-error :messages="$errors->get('lecturer_id')" class="mt-2" />
                 </div>
 
                 <div class="mt-6">
-                    <x-input-label for="password-{{ $user->id }}" :value="__('New Password (leave blank to keep current)')" />
+                    <x-input-label for="password-{{ $user->id }}" :value="__('Mật khẩu mới (để trống nếu không đổi)')" />
                     <x-text-input id="password-{{ $user->id }}" name="password" type="password" class="mt-1 block w-full" />
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
