@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -10,7 +11,6 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/proposals', [ProposalController::class, 'index'])->name('proposals.index');
     Route::get('/dashboard', [ProposalController::class, 'index'])->name('dashboard');
     Route::get('/my-topics', [ProposalController::class, 'myTopics'])->name('my-topics');
     Route::get('/find-supervisor', [ProposalController::class, 'findSupervisor'])->name('find-supervisor');
@@ -30,6 +30,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // User management routes (for admin)
+    Route::resource('users', UserController::class);
 });
 
 require __DIR__.'/auth.php';
