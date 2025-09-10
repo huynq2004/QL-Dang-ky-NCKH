@@ -19,7 +19,7 @@
     @endif
     @endif
     
-    <p>Please review and respond to this invitation within 72 hours. After this period, the invitation will be automatically processed based on your current capacity.</p>
+    <p>Please review and respond to this invitation within 7 days. After this period, the invitation will be automatically marked as expired.</p>
     
     <p>You can manage this invitation by logging into the system.</p>
     

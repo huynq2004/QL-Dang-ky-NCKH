@@ -1,4 +1,4 @@
-@foreach($invitations ?? [] as $invitation)
+@foreach(($invitations ?? []) as $invitation)
 <x-modal name="invitation-detail-{{ $invitation->id }}" focusable>
     <div class="p-6">
         <h2 class="text-lg font-medium text-gray-900 mb-4">
@@ -9,11 +9,11 @@
         <div class="mb-6">
             <h3 class="text-sm font-semibold text-gray-700 mb-2">{{ __('Student Information') }}</h3>
             <div class="bg-gray-50 rounded p-4">
-                <p class="mb-2"><span class="font-medium">{{ __('Họ và tên') }}:</span> {{ $invitation->student->user->name }}</p>
-                <p class="mb-2"><span class="font-medium">{{ __('ID sinh viên') }}:</span> {{ $invitation->student->student_id }}</p>
-                <p class="mb-2"><span class="font-medium">{{ __('Email') }}:</span> {{ $invitation->student->user->email }}</p>
-                @if($invitation->student->phone)
-                    <p class="mb-2"><span class="font-medium">{{ __('Điện thoại liên hệ') }}:</span> {{ $invitation->student->phone }}</p>
+                <p class="mb-2"><span class="font-medium">{{ __('Họ và tên') }}:</span> {{ $invitation->student?->user?->name }}</p>
+                <p class="mb-2"><span class="font-medium">{{ __('ID sinh viên') }}:</span> {{ $invitation->student?->student_id }}</p>
+                <p class="mb-2"><span class="font-medium">{{ __('Email') }}:</span> {{ $invitation->student?->user?->email }}</p>
+                @if($invitation->student?->phone)
+                    <p class="mb-2"><span class="font-medium">{{ __('Điện thoại liên hệ') }}:</span> {{ $invitation->student?->phone }}</p>
                 @endif
             </div>
         </div>
@@ -22,11 +22,11 @@
         <div class="mb-6">
             <h3 class="text-sm font-semibold text-gray-700 mb-2">{{ __('Đề tài nghiên cứu') }}</h3>
             <div class="bg-gray-50 rounded p-4">
-                <p class="mb-2"><span class="font-medium">{{ __('Tiêu đề') }}:</span> {{ $invitation->proposal->title }}</p>
-                <p class="mb-2"><span class="font-medium">{{ __('Lĩnh vực') }}:</span> {{ $invitation->proposal->field }}</p>
-                @if($invitation->proposal->description)
+                <p class="mb-2"><span class="font-medium">{{ __('Tiêu đề') }}:</span> {{ $invitation->proposal?->title }}</p>
+                <p class="mb-2"><span class="font-medium">{{ __('Lĩnh vực') }}:</span> {{ $invitation->proposal?->field }}</p>
+                @if($invitation->proposal?->description)
                     <p class="mb-2"><span class="font-medium">{{ __('Mô tả') }}:</span></p>
-                    <p class="text-gray-600">{{ $invitation->proposal->description }}</p>
+                    <p class="text-gray-600">{{ $invitation->proposal?->description }}</p>
                 @endif
             </div>
         </div>
@@ -36,14 +36,21 @@
             <h3 class="text-sm font-semibold text-gray-700 mb-2">{{ __('Lời mời hướng dẫn') }}</h3>
             <div class="bg-gray-50 rounded p-4">
                 <p class="mb-2"><span class="font-medium">{{ __('Trạng thái') }}:</span> 
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        {{ $invitation->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                           ($invitation->status === 'accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800') }}">
+                    @php
+                        $cls = match($invitation->status) {
+                            'pending' => 'bg-yellow-100 text-yellow-800',
+                            'accepted' => 'bg-green-100 text-green-800',
+                            'rejected' => 'bg-red-100 text-red-800',
+                            'expired', 'withdrawn' => 'bg-gray-100 text-gray-800',
+                            default => 'bg-gray-100 text-gray-800'
+                        };
+                    @endphp
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $cls }}">
                         {{ ucfirst($invitation->status) }}
                     </span>
                 </p>
-                <p class="mb-2"><span class="font-medium">{{ __('Gửi lúc') }}:</span> {{ $invitation->created_at->format('d/m/Y H:i') }}</p>
-                @if($invitation->message)
+                <p class="mb-2"><span class="font-medium">{{ __('Gửi lúc') }}:</span> {{ optional($invitation->created_at)->format('d/m/Y H:i') }}</p>
+                @if(!empty($invitation->message))
                     <p class="mb-2"><span class="font-medium">{{ __('Lời nhắn từ sinh viên') }}:</span></p>
                     <p class="text-gray-600">{{ $invitation->message }}</p>
                 @endif

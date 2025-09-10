@@ -30,16 +30,26 @@
                                 @foreach($invitations as $invitation)
                                     <tr>
                                         <td>{{ $invitation->proposal->title }}</td>
-                                        <td>{{ $invitation->student->name }}</td>
-                                        <td>{{ $invitation->lecturer->name }}</td>
+                                        <td>{{ $invitation->student?->user?->name }}</td>
+                                        <td>{{ $invitation->lecturer?->user?->name }}</td>
                                         <td>
-                                            <span class="badge bg-{{ $invitation->status === 'accepted' ? 'success' : ($invitation->status === 'pending' ? 'warning' : 'danger') }}">
+                                            @php
+                                                $badge = match($invitation->status) {
+                                                    'accepted' => 'success',
+                                                    'pending' => 'warning',
+                                                    'rejected' => 'danger',
+                                                    'expired' => 'secondary',
+                                                    'withdrawn' => 'secondary',
+                                                    default => 'secondary'
+                                                };
+                                            @endphp
+                                            <span class="badge bg-{{ $badge }}">
                                                 {{ ucfirst($invitation->status) }}
                                             </span>
                                         </td>
                                         <td>{{ $invitation->created_at->format('Y-m-d H:i') }}</td>
                                         <td>
-                                            @if($invitation->status === 'pending' && $invitation->lecturer_id === auth()->id())
+                                            @if($invitation->status === 'pending' && optional(auth()->user()->lecturer)->id === $invitation->lecturer_id)
                                                 <form action="{{ route('invitations.accept', $invitation) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-success btn-sm">Chấp nhận</button>

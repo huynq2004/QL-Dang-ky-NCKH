@@ -25,9 +25,16 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {{ $invitation->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                       ($invitation->status === 'accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800') }}">
+                                @php
+                                    $cls = match($invitation->status) {
+                                        'pending' => 'bg-yellow-100 text-yellow-800',
+                                        'accepted' => 'bg-green-100 text-green-800',
+                                        'rejected' => 'bg-red-100 text-red-800',
+                                        'expired', 'withdrawn' => 'bg-gray-100 text-gray-800',
+                                        default => 'bg-gray-100 text-gray-800'
+                                    };
+                                @endphp
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $cls }}">
                                     {{ ucfirst($invitation->status) }}
                                 </span>
                             </td>
