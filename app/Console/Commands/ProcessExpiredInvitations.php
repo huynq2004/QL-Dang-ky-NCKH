@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Facades\ProposalFacade;
+use App\Facades\InvitationFacade;
 use Illuminate\Console\Command;
 
 class ProcessExpiredInvitations extends Command
@@ -15,7 +15,7 @@ class ProcessExpiredInvitations extends Command
     {
         $this->info('Processing expired invitations...');
         
-        ProposalFacade::autoProcessExpiredInvitations();
+        InvitationFacade::autoProcessExpiredInvitations();
         
         $this->info('Finished processing expired invitations.');
         

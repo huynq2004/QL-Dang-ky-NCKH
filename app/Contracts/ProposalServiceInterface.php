@@ -18,25 +18,6 @@ interface ProposalServiceInterface
     public function updateProposal(Proposal $proposal, array $data): Proposal;
     public function deleteProposal(Proposal $proposal): bool;
     public function getStudentProposals(Student $student): Collection;
-    
-    // Invitation methods
-    public function getInvitations(User $user): Collection;
-    public function processInvitation(int $id, string $action): Invitation;
-    public function sendInvitation(Student $student, Lecturer $lecturer, ?int $proposalId = null): Invitation;
-    
-    public function autoProcessExpiredInvitations(): void;
-    
-    public function withdrawInvitation(int $id): void;
-    
-    public function getStudentInvitations(Student $student): Collection;
-    
-    public function canSendInvitation(Student $student, Lecturer $lecturer): bool;
-    
-    public function getActiveProposalsCount(Lecturer $lecturer): int;
-    
-    public function getActiveStudentsCount(Lecturer $lecturer): int;
-    
-    public function createInvitation(array $data): Invitation;
 
     /**
      * Submit a proposal and create an invitation

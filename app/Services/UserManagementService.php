@@ -18,7 +18,7 @@ class UserManagementService implements UserManagementInterface
      */
     public function getAllUsers(): Collection
     {
-        return User::with('roles')->get();
+        return User::query()->get();
     }
 
     /**
@@ -39,8 +39,8 @@ class UserManagementService implements UserManagementInterface
                 'password' => Hash::make($data['password']),
             ]);
 
-            // Assign role
-            $user->assignRole($role);
+            // Assign role string field
+            $user->update(['role' => $role]);
 
             DB::commit();
             return $user;
@@ -69,9 +69,9 @@ class UserManagementService implements UserManagementInterface
                 'email' => $data['email'],
             ]);
 
-            // Update role if provided
+            // Update role if provided (string column)
             if (isset($data['role'])) {
-                $user->syncRoles([$data['role']]);
+                $user->update(['role' => $data['role']]);
             }
 
             DB::commit();
@@ -94,8 +94,7 @@ class UserManagementService implements UserManagementInterface
         try {
             $user = User::findOrFail($id);
             
-            // Remove roles first
-            $user->roles()->detach();
+            // No role relations to detach when using string roles
             
             // Delete user
             $user->delete();
@@ -145,7 +144,7 @@ class UserManagementService implements UserManagementInterface
         DB::beginTransaction();
         try {
             $user = User::findOrFail($userId);
-            $user->syncRoles([$role]);
+            $user->update(['role' => $role]);
 
             DB::commit();
             return true;

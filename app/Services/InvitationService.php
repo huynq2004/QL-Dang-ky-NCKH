@@ -15,7 +15,14 @@ class InvitationService implements InvitationServiceInterface
         'pending',
         'accepted',
         'rejected',
-        'expired'
+        'expired',
+        'withdrawn'
+    ];
+
+    private const ACTION_SYNONYMS = [
+        'accept' => 'accepted',
+        'reject' => 'rejected',
+        'withdraw' => 'withdrawn',
     ];
 
     public function getInvitations(User $user): Collection
@@ -56,14 +63,15 @@ class InvitationService implements InvitationServiceInterface
 
     public function processInvitation(int $id, string $action): Invitation
     {
-        if (!in_array($action, self::VALID_STATUSES)) {
+        $normalized = self::ACTION_SYNONYMS[$action] ?? $action;
+        if (!in_array($normalized, self::VALID_STATUSES)) {
             throw new \InvalidArgumentException('Invalid status value');
         }
 
         $invitation = Invitation::findOrFail($id);
-        $invitation->update(['status' => $action]);
+        $invitation->update(['status' => $normalized]);
         
-        if ($action === 'accepted' && $invitation->proposal) {
+        if ($normalized === 'accepted' && $invitation->proposal) {
             $invitation->proposal->update(['status' => 'active']);
         }
 
@@ -79,7 +87,7 @@ class InvitationService implements InvitationServiceInterface
             throw new \InvalidArgumentException('Only pending invitations can be withdrawn');
         }
         
-        $invitation->delete();
+        $invitation->update(['status' => 'withdrawn']);
     }
 
     public function canSendInvitation(Student $student, Lecturer $lecturer): bool
@@ -104,6 +112,20 @@ class InvitationService implements InvitationServiceInterface
         Invitation::where('status', 'pending')
             ->where('created_at', '<=', now()->subDays(7))
             ->update(['status' => 'expired']);
+    }
+
+    public function findExistingInvitation(int $studentId, int $proposalId, ?int $lecturerId = null): ?Invitation
+    {
+        $query = Invitation::where([
+            'student_id' => $studentId,
+            'proposal_id' => $proposalId,
+        ]);
+
+        if (!is_null($lecturerId)) {
+            $query->where('lecturer_id', $lecturerId);
+        }
+
+        return $query->first();
     }
 
     private function getActiveStudentsCount(Lecturer $lecturer): int

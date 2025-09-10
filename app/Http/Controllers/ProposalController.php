@@ -107,10 +107,10 @@ class ProposalController extends Controller
         $existingRequest = null;
         
         if ($user->role === 'student') {
-            $existingRequest = Invitation::where([
-                'student_id' => $user->student->id,
-                'proposal_id' => $proposal->id
-            ])->first();
+            $existingRequest = InvitationFacade::findExistingInvitation(
+                $user->student->id,
+                $proposal->id
+            );
             
             $canRequest = !$existingRequest && $proposal->status === 'active';
         }
@@ -280,13 +280,13 @@ class ProposalController extends Controller
         }
 
         // Check if invitation already exists
-        $existingInvitation = Invitation::where([
-            'student_id' => $user->student->id,
-            'lecturer_id' => $proposal->lecturer_id,
-            'proposal_id' => $proposal->id,
-        ])->exists();
+        $existingInvitation = InvitationFacade::findExistingInvitation(
+            $user->student->id,
+            $proposal->id,
+            $proposal->lecturer_id
+        );
 
-        if ($existingInvitation) {
+        if ($existingInvitation !== null) {
             return redirect()->back()->with('error', 'You have already sent an invitation for this proposal.');
         }
 
@@ -332,10 +332,10 @@ class ProposalController extends Controller
         }
 
         // Check if student already has a request for this proposal
-        $existingRequest = Invitation::where([
-            'student_id' => $user->student->id,
-            'proposal_id' => $proposal->id
-        ])->first();
+        $existingRequest = InvitationFacade::findExistingInvitation(
+            $user->student->id,
+            $proposal->id
+        );
 
         if ($existingRequest) {
             return redirect()->back()->with('error', 'You have already sent a request for this research topic.');

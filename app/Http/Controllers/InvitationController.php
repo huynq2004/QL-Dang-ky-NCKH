@@ -6,6 +6,8 @@ use App\Models\Invitation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Facades\ProposalFacade;
+use App\Facades\InvitationFacade;
+use App\Facades\LecturerFacade;
 use App\Models\Proposal;
 
 class InvitationController extends Controller
@@ -19,10 +21,10 @@ class InvitationController extends Controller
             'proposals' => ProposalFacade::getProposals(),
             'studentProposals' => $user->role === 'student' ? ProposalFacade::getStudentProposals($user->student) : collect(),
             'invitations' => $user->role === 'student' 
-                ? ProposalFacade::getStudentInvitations($user->student)
-                : Invitation::where('lecturer_id', $user->lecturer->id)->get(),
-            'lecturers' => $user->role === 'student' ? ProposalFacade::getAvailableLecturers() : collect(),
-            'lecturerProposals' => $user->role === 'lecturer' ? Proposal::where('lecturer_id', $user->lecturer->id)->get() : collect()
+                ? InvitationFacade::getStudentInvitations($user->student)
+                : InvitationFacade::getInvitations($user),
+            'lecturers' => $user->role === 'student' ? LecturerFacade::getAvailableLecturers() : collect(),
+            'lecturerProposals' => $user->role === 'lecturer' ? ProposalFacade::getLecturerProposals($user->lecturer) : collect()
         ];
 
         return view('proposals.index', $data);
@@ -36,13 +38,7 @@ class InvitationController extends Controller
             abort(403);
         }
 
-        // Update invitation status
-        $invitation->update(['status' => 'accepted']);
-
-        // Update proposal status if this is a new topic request
-        if ($invitation->proposal && $invitation->proposal->status === 'draft') {
-            $invitation->proposal->update(['status' => 'active']);
-        }
+        InvitationFacade::processInvitation($invitation->id, 'accept');
 
         return redirect()->back()->with('success', 'Request accepted successfully.');
     }
@@ -55,7 +51,7 @@ class InvitationController extends Controller
             abort(403);
         }
 
-        $invitation->update(['status' => 'rejected']);
+        InvitationFacade::processInvitation($invitation->id, 'reject');
 
         return redirect()->back()->with('success', 'Request rejected successfully.');
     }
@@ -75,22 +71,22 @@ class InvitationController extends Controller
         ]);
 
         // Check if an invitation already exists
-        $existingInvitation = Invitation::where([
-            'student_id' => $user->student->id,
-            'lecturer_id' => $validated['lecturer_id'],
-            'proposal_id' => $validated['proposal_id']
-        ])->first();
+        $existingInvitation = InvitationFacade::findExistingInvitation(
+            $user->student->id,
+            $validated['proposal_id'],
+            $validated['lecturer_id']
+        );
 
         if ($existingInvitation) {
             return redirect()->back()->with('error', 'You have already sent a request for this research topic.');
         }
 
         // Create new invitation
-        Invitation::create([
+        InvitationFacade::createInvitation([
             'student_id' => $user->student->id,
             'lecturer_id' => $validated['lecturer_id'],
             'proposal_id' => $validated['proposal_id'],
-            'message' => $validated['message'],
+            'message' => $validated['message'] ?? null,
             'status' => 'pending'
         ]);
 

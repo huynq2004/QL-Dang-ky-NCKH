@@ -129,6 +129,9 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         // Custom Facades
         'ProposalFacade' => App\Facades\ProposalFacade::class,
+        'InvitationFacade' => App\Facades\InvitationFacade::class,
+        'LecturerFacade' => App\Facades\LecturerFacade::class,
+        'UserManagementFacade' => App\Facades\UserManagementFacade::class,
     ])->toArray(),
 
     'providers' => ServiceProvider::defaultProviders()->merge([
@@ -144,7 +147,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        App\Providers\ProposalServiceProvider::class,
+        // App\Providers\ProposalServiceProvider::class,
         App\Providers\UserManagementServiceProvider::class,
     ])->toArray(),
 
