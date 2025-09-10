@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Contracts\UserManagementInterface;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -12,13 +12,13 @@ use Illuminate\Support\Str;
 class UserManagementService implements UserManagementInterface
 {
     /**
-     * Get all users with their roles
+     * Get all users with pagination
      *
-     * @return Collection
+     * @return LengthAwarePaginator
      */
-    public function getAllUsers(): Collection
+    public function getAllUsers(): LengthAwarePaginator
     {
-        return User::query()->get();
+        return User::with(['student', 'lecturer'])->orderByDesc('id')->paginate(10);
     }
 
     /**

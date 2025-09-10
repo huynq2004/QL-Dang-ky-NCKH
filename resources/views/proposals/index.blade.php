@@ -12,8 +12,8 @@
                         </a>
                     </li>
                     <li class="me-2">
-                        <a href="{{ route('users.index') }}"
-                           class="inline-block p-4 border-b-2 rounded-t-lg {{ request()->routeIs('users.*') ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
+                        <a href="{{ route('admin.users.index') }}"
+                           class="inline-block p-4 border-b-2 rounded-t-lg {{ request()->routeIs('admin.users.*') ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
                             {{ __('QUẢN LÝ NGƯỜI DÙNG') }}
                         </a>
                     </li>

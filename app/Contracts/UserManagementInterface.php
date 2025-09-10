@@ -3,16 +3,16 @@
 namespace App\Contracts;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface UserManagementInterface
 {
     /**
-     * Get all users with their roles
+     * Get all users with pagination
      *
-     * @return Collection
+     * @return LengthAwarePaginator
      */
-    public function getAllUsers(): Collection;
+    public function getAllUsers(): LengthAwarePaginator;
 
     /**
      * Create a new user with role

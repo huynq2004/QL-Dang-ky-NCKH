@@ -11,7 +11,7 @@
                         </a>
                     </li>
                     <li class="me-2">
-                        <a href="{{ route('users.index') }}"
+                        <a href="{{ route('admin.users.index') }}"
                            class="inline-block p-4 border-b-2 rounded-t-lg border-indigo-600 text-indigo-600">
                             {{ __('QUẢN LÝ NGƯỜI DÙNG') }}
                         </a>
@@ -104,7 +104,7 @@
 
     <!-- Create User Modal -->
     <x-modal name="create-user" focusable>
-        <form method="POST" action="{{ route('users.store') }}" class="p-6" 
+        <form method="POST" action="{{ route('admin.users.store') }}" class="p-6" 
             x-data="{ 
                 role: '{{ old('role', 'student') }}',
                 name: '',
@@ -242,7 +242,7 @@
     <!-- Edit User Modals -->
     @foreach($users as $user)
         <x-modal name="edit-user-{{ $user->id }}" focusable>
-            <form method="POST" action="{{ route('users.update', $user) }}" class="p-6" x-data="{ role: '{{ $user->role }}' }">
+            <form method="POST" action="{{ route('admin.users.update', $user) }}" class="p-6" x-data="{ role: '{{ $user->role }}' }">
                 @csrf
                 @method('PUT')
 
@@ -320,7 +320,7 @@
 
         <!-- Delete User Modal -->
         <x-modal name="delete-user-{{ $user->id }}" focusable>
-            <form method="POST" action="{{ route('users.destroy', $user) }}" class="p-6">
+            <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="p-6">
                 @csrf
                 @method('DELETE')
 

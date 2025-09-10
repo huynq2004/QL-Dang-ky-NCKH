@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -32,8 +33,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::delete('/profile', [UserController::class, 'destroyProfile'])->name('profile.destroy');
 
-    // User management routes (for admin)
-    Route::resource('users', UserController::class);
+    // (moved to admin prefix group below)
+});
+
+// Admin prefixed routes with name alias for backward compatibility
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
+    Route::resource('users', AdminUserController::class);
 });
 
 require __DIR__.'/auth.php';
