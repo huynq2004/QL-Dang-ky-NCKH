@@ -47,6 +47,7 @@ class Proposal extends Model
 
     public function canAcceptMoreMembers(): bool
     {
-        return $this->getAcceptedMembersCount() < 5;
+        return app(\App\Services\InvitationService::class)
+               ->proposalHasCapacity($this->id);
     }
 } 

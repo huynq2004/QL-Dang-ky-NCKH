@@ -6,8 +6,10 @@ use App\Models\Invitation;
 use App\Models\Student;
 use App\Models\Lecturer;
 use App\Models\User;
+use App\Models\Proposal;
 use App\Contracts\InvitationServiceInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class InvitationService implements InvitationServiceInterface
 {
@@ -69,6 +71,22 @@ class InvitationService implements InvitationServiceInterface
         return Invitation::create($data);
     }
 
+    public function lecturerCanAcceptMore(int $lecturerId): bool
+    {
+        $lecturer = Lecturer::findOrFail($lecturerId);
+        $accepted = Invitation::where('lecturer_id', $lecturerId)
+            ->where('status', 'accepted')->count();
+        return $accepted < (int) $lecturer->max_students;
+    }
+
+    public function proposalHasCapacity(int $proposalId): bool
+    {
+        $proposal = Proposal::findOrFail($proposalId);
+        $accepted = Invitation::where('proposal_id', $proposalId)
+            ->where('status', 'accepted')->count();
+        return $accepted < (int) optional($proposal->lecturer)->max_students;
+    }
+
     public function processInvitation(int $id, string $action): Invitation
     {
         $normalized = self::ACTION_SYNONYMS[$action] ?? $action;
@@ -76,36 +94,42 @@ class InvitationService implements InvitationServiceInterface
             throw new \InvalidArgumentException('Invalid status value');
         }
 
-        $invitation = Invitation::findOrFail($id);
-        
-        // Check student limit when accepting
-        if ($normalized === 'accepted') {
-            $lecturer = $invitation->lecturer;
-            $acceptedCount = $this->getActiveStudentsCount($lecturer);
-            if ($acceptedCount >= $lecturer->max_students) {
-                throw new \InvalidArgumentException('Lecturer has reached maximum student limit');
-            }
-        }
-        
-        $invitation->update(['status' => $normalized]);
-        
-        if ($normalized === 'accepted' && $invitation->proposal) {
-            $invitation->proposal->update(['status' => 'active']);
-        }
+        return DB::transaction(function () use ($id, $normalized) {
+            $invitation = Invitation::with(['lecturer', 'proposal'])->findOrFail($id);
 
-        return $invitation;
+            if ($normalized === 'accepted') {
+                if (!$this->lecturerCanAcceptMore($invitation->lecturer_id)) {
+                    throw new \RuntimeException('Lecturer is at capacity');
+                }
+                if (!$this->proposalHasCapacity($invitation->proposal_id)) {
+                    throw new \RuntimeException('Proposal has no capacity');
+                }
+            }
+
+            $invitation->update([
+                'status' => $normalized,
+                'processed_at' => now(),
+            ]);
+
+            return $invitation;
+        });
     }
 
     public function withdrawInvitation(int $id): void
     {
-        $invitation = Invitation::findOrFail($id);
-        
-        // Chỉ cho phép thu hồi nếu trạng thái là pending
-        if ($invitation->status !== 'pending') {
-            throw new \InvalidArgumentException('Only pending invitations can be withdrawn');
-        }
-        
-        $invitation->update(['status' => 'withdrawn']);
+        DB::transaction(function () use ($id) {
+            $invitation = Invitation::findOrFail($id);
+            if ($invitation->status !== 'pending') {
+                throw new \InvalidArgumentException('Only pending invitations can be withdrawn');
+            }
+            if (now()->diffInHours($invitation->created_at) >= 24) {
+                throw new \InvalidArgumentException('You can only withdraw within 24 hours');
+            }
+            $invitation->update([
+                'status' => 'withdrawn',
+                'processed_at' => now(),
+            ]);
+        });
     }
 
     public function canSendInvitation(Student $student, Lecturer $lecturer): bool
