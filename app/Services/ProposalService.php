@@ -53,6 +53,31 @@ class ProposalService implements ProposalServiceInterface
             ->get();
     }
 
+    public function getLecturerActiveProposals(Lecturer $lecturer): Collection
+    {
+        // Chỉ lấy đề tài đã được chấp nhận (đang tham gia)
+        return Proposal::with(['lecturer.user', 'student.user', 'invitations'])
+            ->where(function($query) use ($lecturer) {
+                // Điều kiện 1: Đề tài do giảng viên tạo VÀ có ít nhất 1 invitation được chấp nhận
+                $query->where('lecturer_id', $lecturer->id)
+                    ->whereHas('invitations', function($invitationQuery) {
+                        $invitationQuery->where('status', 'accepted');
+                    })
+                    // HOẶC
+                    ->orWhere(function($subQuery) use ($lecturer) {
+                        // Điều kiện 2: Đề tài mà giảng viên được mời VÀ đã chấp nhận
+                        $subQuery->whereHas('invitations', function($invitationQuery) use ($lecturer) {
+                            $invitationQuery->where([
+                                'lecturer_id' => $lecturer->id,
+                                'status' => 'accepted'
+                            ]);
+                        });
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
     // Invitation-related operations are handled by InvitationService
 
     public function createProposal(array $data): Proposal

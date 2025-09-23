@@ -155,7 +155,7 @@
                                         <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'edit-proposal-{{ $proposal->id }}')">
                                             {{ __('Sửa') }}
                                         </x-secondary-button>
-                                        @if($proposal->invitations->isEmpty())
+                                        @if(Auth::user()->role === 'admin')
                                             <x-danger-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'delete-proposal-{{ $proposal->id }}')">
                                                 {{ __('Xóa') }}
                                             </x-danger-button>

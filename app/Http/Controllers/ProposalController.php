@@ -74,7 +74,7 @@ class ProposalController extends Controller
             $data['lecturers'] = LecturerFacade::getAvailableLecturers();
         } elseif ($user->role === 'lecturer') {
             $data['invitations'] = InvitationFacade::getInvitations($user);
-            $data['lecturerProposals'] = ProposalFacade::getLecturerProposals($user->lecturer);
+            $data['lecturerProposals'] = ProposalFacade::getLecturerActiveProposals($user->lecturer);
         }
 
         return view('proposals.index', $data);
@@ -120,7 +120,10 @@ class ProposalController extends Controller
 
     public function create()
     {
-        $this->checkStudentRole();
+        $user = Auth::user();
+        if ($user->role !== 'student' && $user->role !== 'lecturer') {
+            abort(403, 'Only students and lecturers can create proposals.');
+        }
         return view('proposals.create');
     }
 
@@ -169,7 +172,11 @@ class ProposalController extends Controller
             
             $proposal = ProposalFacade::submitProposalWithInvitation($data);
         } else {
-            $data['lecturer_id'] = $user->lecturer->id;
+            $lecturerId = optional($user->lecturer)->id;
+            if (!$lecturerId) {
+                return redirect()->back()->with('error', 'Lecturer profile not found. Please contact administrator.');
+            }
+            $data['lecturer_id'] = $lecturerId;
             $data['status'] = 'active';
             
             $proposal = ProposalFacade::createProposal($data);
@@ -203,8 +210,8 @@ class ProposalController extends Controller
     {
         $user = Auth::user();
         
-        if ($user->role !== 'lecturer' || $proposal->lecturer_id !== $user->lecturer->id) {
-            return redirect()->back()->with('error', 'You are not authorized to delete this proposal.');
+        if ($user->role !== 'admin') {
+            return redirect()->back()->with('error', 'Only administrators can delete proposals.');
         }
 
         ProposalFacade::deleteProposal($proposal);

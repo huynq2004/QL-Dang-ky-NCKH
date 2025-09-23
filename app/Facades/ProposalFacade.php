@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \App\Models\Proposal updateProposal(\App\Models\Proposal $proposal, array $data)
  * @method static bool deleteProposal(\App\Models\Proposal $proposal)
  * @method static \Illuminate\Database\Eloquent\Collection getLecturerProposals(\App\Models\Lecturer $lecturer)
+ * @method static \Illuminate\Database\Eloquent\Collection getLecturerActiveProposals(\App\Models\Lecturer $lecturer)
  * @method static \Illuminate\Database\Eloquent\Collection getStudentProposals(\App\Models\Student $student)
  * @method static \App\Models\Proposal submitProposalWithInvitation(array $data)
  * @method static \App\Models\Proposal updateProposalAndNotify(\App\Models\Proposal $proposal, array $data)

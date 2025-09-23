@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/invitations', [InvitationController::class, 'store'])->name('invitations.store');
     Route::post('/invitations/{invitation}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
     Route::post('/invitations/{invitation}/reject', [InvitationController::class, 'reject'])->name('invitations.reject');
+    Route::delete('/invitations/{invitation}/withdraw', [ProposalController::class, 'withdrawInvitation'])->name('invitations.withdraw');
 
     Route::get('/profile', [UserController::class, 'viewProfile'])->name('profile.view');
     Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');

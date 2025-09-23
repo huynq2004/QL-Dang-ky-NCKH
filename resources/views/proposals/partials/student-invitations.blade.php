@@ -41,7 +41,7 @@
                             <td class="px-6 py-4 whitespace-nowrap">{{ $invitation->created_at->format('Y-m-d H:i') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($invitation->status === 'pending')
-                                    <form action="{{ route('proposals.withdraw-request', $invitation) }}" method="POST" class="inline">
+                                    <form action="{{ route('invitations.withdraw', $invitation) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <x-danger-button>

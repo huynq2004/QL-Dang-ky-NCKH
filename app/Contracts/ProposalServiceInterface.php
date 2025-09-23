@@ -14,6 +14,7 @@ interface ProposalServiceInterface
     // Proposal methods
     public function getProposals(): Collection;
     public function getLecturerProposals(Lecturer $lecturer): Collection;
+    public function getLecturerActiveProposals(Lecturer $lecturer): Collection;
     public function createProposal(array $data): Proposal;
     public function updateProposal(Proposal $proposal, array $data): Proposal;
     public function deleteProposal(Proposal $proposal): bool;

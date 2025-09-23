@@ -212,7 +212,7 @@ class UserController extends Controller
 
         UserManagementFacade::updateUser($user->id, $validated);
 
-        return redirect()->route('profile.edit')->with('status', 'profile-updated');
+        return redirect()->route('profile.edit')->with('success', 'Thông tin cá nhân đã được cập nhật thành công.');
     }
 
     public function destroyProfile(Request $request): RedirectResponse

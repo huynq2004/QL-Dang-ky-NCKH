@@ -28,13 +28,21 @@ class InvitationService implements InvitationServiceInterface
     public function getInvitations(User $user): Collection
     {
         if ($user->role === 'lecturer') {
+            $lecturerId = optional($user->lecturer)->id;
+            if (!$lecturerId) {
+                return collect();
+            }
             return Invitation::with(['student.user', 'proposal'])
-                ->where('lecturer_id', $user->lecturer->id)
+                ->where('lecturer_id', $lecturerId)
                 ->orderBy('created_at', 'desc')
                 ->get();
         } elseif ($user->role === 'student') {
+            $studentId = optional($user->student)->id;
+            if (!$studentId) {
+                return collect();
+            }
             return Invitation::with(['lecturer.user', 'proposal'])
-                ->where('student_id', $user->student->id)
+                ->where('student_id', $studentId)
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
@@ -69,6 +77,16 @@ class InvitationService implements InvitationServiceInterface
         }
 
         $invitation = Invitation::findOrFail($id);
+        
+        // Check student limit when accepting
+        if ($normalized === 'accepted') {
+            $lecturer = $invitation->lecturer;
+            $acceptedCount = $this->getActiveStudentsCount($lecturer);
+            if ($acceptedCount >= $lecturer->max_students) {
+                throw new \InvalidArgumentException('Lecturer has reached maximum student limit');
+            }
+        }
+        
         $invitation->update(['status' => $normalized]);
         
         if ($normalized === 'accepted' && $invitation->proposal) {
@@ -104,7 +122,7 @@ class InvitationService implements InvitationServiceInterface
 
         // Check if lecturer has reached their maximum student limit
         $acceptedInvitations = $this->getActiveStudentsCount($lecturer);
-        return $acceptedInvitations < ($lecturer->max_students ?? 5);
+        return $acceptedInvitations < $lecturer->max_students;
     }
 
     public function autoProcessExpiredInvitations(): void
