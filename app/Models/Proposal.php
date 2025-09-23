@@ -14,7 +14,6 @@ class Proposal extends Model
         'field',
         'lecturer_id',
         'student_id',
-        'current_members',
         'is_visible',
         'status',
     ];

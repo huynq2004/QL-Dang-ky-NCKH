@@ -54,9 +54,13 @@ class InvitationController extends Controller
             abort(403);
         }
 
-        InvitationFacade::processInvitation($invitation->id, 'reject');
-
-        return redirect()->back()->with('success', 'Request rejected successfully.');
+        try {
+            InvitationFacade::processInvitation($invitation->id, 'reject');
+            return redirect()->back()->with('success', 'Request rejected successfully.');
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     public function store(Request $request)

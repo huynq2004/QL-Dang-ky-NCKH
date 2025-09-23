@@ -60,9 +60,5 @@ class Invitation extends Model
             'status' => $status,
             'processed_at' => Carbon::now(),
         ]);
-
-        if ($status === 'accepted' && $this->proposal) {
-            $this->proposal->increment('current_members');
-        }
     }
 } 
