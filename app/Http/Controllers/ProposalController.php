@@ -80,7 +80,7 @@ class ProposalController extends Controller
         return view('proposals.index', $data);
     }
 
-    public function findSupervisor()
+    public function findSupervisor(\Illuminate\Http\Request $request)
     {
         $user = Auth::user();
         if ($user->role !== 'student') {
@@ -92,7 +92,10 @@ class ProposalController extends Controller
             'proposals' => ProposalFacade::getProposals(),
             'studentProposals' => ProposalFacade::getStudentProposals($user->student),
             'invitations' => InvitationFacade::getStudentInvitations($user->student),
-            'lecturers' => LecturerFacade::getAvailableLecturers()
+            'lecturers' => LecturerFacade::searchAvailableLecturersBy(
+                $request->input('by', 'name'),
+                $request->input('q')
+            )
         ];
 
         return view('proposals.index', $data);
