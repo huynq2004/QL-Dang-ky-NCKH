@@ -15,6 +15,7 @@ interface InvitationServiceInterface
     public function createInvitation(array $data): Invitation;
     public function processInvitation(int $id, string $action): Invitation;
     public function withdrawInvitation(int $id): void;
+    public function deleteInvitation(int $id, \App\Models\User $actor): bool;
     public function canSendInvitation(Student $student, Lecturer $lecturer): bool;
     public function autoProcessExpiredInvitations(): void;
     public function findExistingInvitation(int $studentId, int $proposalId, ?int $lecturerId = null): ?Invitation;

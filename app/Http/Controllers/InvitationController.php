@@ -99,4 +99,19 @@ class InvitationController extends Controller
 
         return redirect()->back()->with('success', 'Yêu cầu đã được gửi thành công.');
     }
+
+    public function destroy(Invitation $invitation)
+    {
+        $user = Auth::user();
+
+        try {
+            InvitationFacade::deleteInvitation($invitation->id, $user);
+            return redirect()->back()->with('success', 'Đã xoá lời mời khỏi hệ thống.');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->with('error', 'Không thể xoá lời mời: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->back()->with('error', 'Đã xảy ra lỗi khi xoá lời mời.');
+        }
+    }
 } 

@@ -9,6 +9,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Trạng thái') }}</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Gửi lúc') }}</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Thao tác') }}</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -47,6 +48,17 @@
                                         <x-danger-button>
                                             {{ __('Thu hồi yêu cầu') }}
                                         </x-danger-button>
+                                    </form>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                @if($invitation->status === 'pending')
+                                    <button type="button" class="text-gray-400 hover:text-gray-600" onclick="alert('Lời mời đang chờ xử lý không thể xoá.');" aria-label="Không thể xoá">×</button>
+                                @else
+                                    <form action="{{ route('invitations.destroy', $invitation) }}" method="POST" class="inline" onsubmit="return confirm('Xoá lời mời này khỏi hệ thống?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-gray-400 hover:text-red-600" aria-label="Xoá">×</button>
                                     </form>
                                 @endif
                             </td>

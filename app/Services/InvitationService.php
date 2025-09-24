@@ -170,6 +170,31 @@ class InvitationService implements InvitationServiceInterface
         return $query->first();
     }
 
+    public function deleteInvitation(int $id, User $actor): bool
+    {
+        $invitation = Invitation::findOrFail($id);
+
+        // Pending invitations cannot be deleted
+        if ($invitation->status === 'pending') {
+            throw new \InvalidArgumentException('Cannot delete pending invitations');
+        }
+
+        // Permission: student who sent it or lecturer who received it, or admin
+        if ($actor->role === 'student') {
+            if (optional($actor->student)->id !== $invitation->student_id) {
+                throw new \InvalidArgumentException('Not allowed to delete this invitation');
+            }
+        } elseif ($actor->role === 'lecturer') {
+            if (optional($actor->lecturer)->id !== $invitation->lecturer_id) {
+                throw new \InvalidArgumentException('Not allowed to delete this invitation');
+            }
+        } elseif ($actor->role !== 'admin') {
+            throw new \InvalidArgumentException('Not allowed to delete this invitation');
+        }
+
+        return (bool) $invitation->delete();
+    }
+
     private function getActiveStudentsCount(Lecturer $lecturer): int
     {
         return Invitation::where('lecturer_id', $lecturer->id)

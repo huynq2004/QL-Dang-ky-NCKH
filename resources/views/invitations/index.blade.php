@@ -20,6 +20,7 @@
                                     <th>Trạng thái</th>
                                     <th>Ngày tạo</th>
                                     <th>Thao tác</th>
+                                    <th class="text-end"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -53,6 +54,17 @@
                                                 <form action="{{ route('invitations.reject', $invitation) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-danger btn-sm">Từ chối</button>
+                                                </form>
+                                            @endif
+                                        </td>
+                                        <td class="text-end">
+                                            @if($invitation->status === 'pending')
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="alert('Lời mời đang chờ xử lý không thể xoá.');">×</button>
+                                            @else
+                                                <form action="{{ route('invitations.destroy', $invitation) }}" method="POST" class="d-inline" onsubmit="return confirm('Xoá lời mời này khỏi hệ thống?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm">×</button>
                                                 </form>
                                             @endif
                                         </td>

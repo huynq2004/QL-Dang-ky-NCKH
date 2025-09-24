@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static bool canSendInvitation(\App\Models\Student $student, \App\Models\Lecturer $lecturer)
  * @method static void autoProcessExpiredInvitations()
  * @method static null|\App\Models\Invitation findExistingInvitation(int $studentId, int $proposalId, ?int $lecturerId = null)
+ * @method static bool deleteInvitation(int $id, \App\Models\User $actor)
  */
 class InvitationFacade extends Facade
 {
