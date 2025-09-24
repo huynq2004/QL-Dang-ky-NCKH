@@ -26,5 +26,8 @@
                 {{ $slot }}
             </div>
         </div>
+        @if(session('success') || session('error') || session('status'))
+            @include('components.toast')
+        @endif
     </body>
 </html>
