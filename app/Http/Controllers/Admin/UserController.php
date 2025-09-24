@@ -30,7 +30,7 @@ class UserController extends Controller
         ]);
 
         $user = UserManagementFacade::createUser($validated, $validated['role']);
-        return redirect()->route('admin.users.index')->with('success', 'User created successfully');
+        return redirect()->route('admin.users.index')->with('success', 'Tạo người dùng thành công.');
     }
 
     public function update(Request $request, $id)
@@ -42,19 +42,19 @@ class UserController extends Controller
         ]);
 
         $user = UserManagementFacade::updateUser($id, $validated);
-        return redirect()->route('admin.users.index')->with('success', 'User updated successfully');
+        return redirect()->route('admin.users.index')->with('success', 'Cập nhật người dùng thành công.');
     }
 
     public function destroy($id)
     {
         UserManagementFacade::deleteUser($id);
-        return redirect()->route('admin.users.index')->with('success', 'User deleted successfully');
+        return redirect()->route('admin.users.index')->with('success', 'Xoá người dùng thành công.');
     }
 
     public function resetPassword($id)
     {
         UserManagementFacade::resetPassword($id);
-        return redirect()->route('admin.users.index')->with('success', 'Password has been reset');
+        return redirect()->route('admin.users.index')->with('success', 'Mật khẩu đã được đặt lại.');
     }
 
     public function changeRole(Request $request, $id)
@@ -64,6 +64,6 @@ class UserController extends Controller
         ]);
 
         UserManagementFacade::changeRole($id, $validated['role']);
-        return redirect()->route('admin.users.index')->with('success', 'Role updated successfully');
+        return redirect()->route('admin.users.index')->with('success', 'Cập nhật vai trò thành công.');
     }
 } 

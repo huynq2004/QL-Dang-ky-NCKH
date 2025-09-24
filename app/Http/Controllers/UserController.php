@@ -24,7 +24,7 @@ class UserController extends Controller
     {
         if (Auth::user()->role !== 'admin') {
             return redirect()->route('dashboard')
-                ->with('error', 'Unauthorized action.');
+                ->with('error', 'Hành động không được phép.');
         }
 
         $users = User::with(['student', 'lecturer'])->paginate(10);
@@ -35,7 +35,7 @@ class UserController extends Controller
     {
         if (Auth::user()->role !== 'admin') {
             return redirect()->route('dashboard')
-                ->with('error', 'Unauthorized action.');
+                ->with('error', 'Hành động không được phép.');
         }
 
         $rules = [
@@ -87,7 +87,7 @@ class UserController extends Controller
     {
         if (Auth::user()->role !== 'admin') {
             return redirect()->route('dashboard')
-                ->with('error', 'Unauthorized action.');
+                ->with('error', 'Hành động không được phép.');
         }
 
         $rules = [
@@ -162,12 +162,12 @@ class UserController extends Controller
     {
         if (Auth::user()->role !== 'admin') {
             return redirect()->route('dashboard')
-                ->with('error', 'Unauthorized action.');
+                ->with('error', 'Hành động không được phép.');
         }
 
         if ($user->id === Auth::id()) {
             return redirect()->route('users.index')
-                ->with('error', 'You cannot delete your own account.');
+                ->with('error', 'Bạn không thể tự xoá tài khoản của chính mình.');
         }
 
         // Delete associated role model
@@ -180,7 +180,7 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('users.index')
-            ->with('success', 'User deleted successfully.');
+            ->with('success', 'Xoá người dùng thành công.');
     }
 
     public function editProfile(): View

@@ -40,9 +40,9 @@ class InvitationController extends Controller
 
         try {
             InvitationFacade::processInvitation($invitation->id, 'accept');
-            return redirect()->back()->with('success', 'Request accepted successfully.');
+            return redirect()->back()->with('success', 'Đã chấp nhận yêu cầu thành công.');
         } catch (\InvalidArgumentException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->with('error', 'Đã xảy ra lỗi. ' . $e->getMessage());
         }
     }
 
@@ -56,7 +56,7 @@ class InvitationController extends Controller
 
         try {
             InvitationFacade::processInvitation($invitation->id, 'reject');
-            return redirect()->back()->with('success', 'Request rejected successfully.');
+            return redirect()->back()->with('success', 'Đã từ chối yêu cầu thành công.');
         } catch (\Throwable $e) {
             report($e);
             return redirect()->back()->with('error', $e->getMessage());
@@ -85,7 +85,7 @@ class InvitationController extends Controller
         );
 
         if ($existingInvitation) {
-            return redirect()->back()->with('error', 'You have already sent a request for this research topic.');
+            return redirect()->back()->with('error', 'Bạn đã gửi yêu cầu cho đề tài này trước đó.');
         }
 
         // Create new invitation
@@ -97,6 +97,6 @@ class InvitationController extends Controller
             'status' => 'pending'
         ]);
 
-        return redirect()->back()->with('success', 'Request sent successfully.');
+        return redirect()->back()->with('success', 'Yêu cầu đã được gửi thành công.');
     }
 } 
