@@ -111,12 +111,12 @@
         <form method="POST" action="{{ route('admin.users.store') }}" class="p-6" 
             x-data="{ 
                 role: '{{ old('role', 'student') }}',
-                name: '',
-                email: '',
+                name: '{{ old('name') }}',
+                email: '{{ old('email') }}',
                 password: '',
                 password_confirmation: '',
-                student_id: '',
-                lecturer_id: '',
+                student_id: '{{ old('student_id') }}',
+                lecturer_id: '{{ old('lecturer_id') }}',
                 errors: {
                     name: '',
                     email: '',
@@ -125,7 +125,19 @@
                     student_id: '',
                     lecturer_id: ''
                 },
-                validateForm() {
+                async checkUnique(field, value) {
+                    const url = new URL('{{ route('admin.users.check-unique') }}');
+                    url.searchParams.set('type', field);
+                    url.searchParams.set('value', value);
+                    try {
+                        const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                        const data = await res.json();
+                        return data.unique === true;
+                    } catch(e) {
+                        return true;
+                    }
+                },
+                async validateForm() {
                     let isValid = true;
                     this.errors = {
                         name: '',
@@ -147,6 +159,11 @@
                     } else if (!this.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
                         this.errors.email = 'Email không hợp lệ';
                         isValid = false;
+                    } else {
+                        if (!(await this.checkUnique('email', this.email))) {
+                            this.errors.email = 'Email đã được sử dụng.';
+                            isValid = false;
+                        }
                     }
 
                     if (!this.password) {
@@ -165,20 +182,30 @@
                         isValid = false;
                     }
 
-                    if (this.role === 'student' && !this.student_id) {
-                        this.errors.student_id = 'Vui lòng nhập mã sinh viên';
-                        isValid = false;
+                    if (this.role === 'student') {
+                        if (!this.student_id) {
+                            this.errors.student_id = 'Vui lòng nhập mã sinh viên';
+                            isValid = false;
+                        } else if (!(await this.checkUnique('student_id', this.student_id))) {
+                            this.errors.student_id = 'Mã sinh viên đã được sử dụng.';
+                            isValid = false;
+                        }
                     }
 
-                    if (this.role === 'lecturer' && !this.lecturer_id) {
-                        this.errors.lecturer_id = 'Vui lòng nhập mã giảng viên';
-                        isValid = false;
+                    if (this.role === 'lecturer') {
+                        if (!this.lecturer_id) {
+                            this.errors.lecturer_id = 'Vui lòng nhập mã giảng viên';
+                            isValid = false;
+                        } else if (!(await this.checkUnique('lecturer_id', this.lecturer_id))) {
+                            this.errors.lecturer_id = 'Mã giảng viên đã được sử dụng.';
+                            isValid = false;
+                        }
                     }
 
                     return isValid;
                 }
             }"
-            @submit.prevent="if (validateForm()) $el.submit();"
+            @submit.prevent="(async () => { if (await validateForm()) $el.submit(); })()"
         >
             @csrf
 
@@ -189,13 +216,16 @@
             <div class="mt-6">
                 <x-input-label for="name" :value="__('Họ và tên')" />
                 <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" x-model="name" />
+                <x-input-error :messages="$errors->createUser?->get('name')" class="mt-2" />
                 <p class="mt-2 text-sm text-red-600" x-text="errors.name" x-show="errors.name"></p>
             </div>
 
             <div class="mt-6">
                 <x-input-label for="email" :value="__('Email')" />
-                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" x-model="email" />
-                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" x-model="email"
+                    @blur="(async () => { if (email && email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { errors.email = (await checkUnique('email', email)) ? '' : 'Email đã được sử dụng.' } })()"
+                />
+                <x-input-error :messages="$errors->createUser?->get('email')" class="mt-2" />
                 <p class="mt-2 text-sm text-red-600" x-text="errors.email" x-show="errors.email"></p>
             </div>
 
@@ -206,31 +236,40 @@
                     <option value="lecturer">Giảng viên</option>
                     <option value="admin">Quản trị viên</option>
                 </select>
+                <x-input-error :messages="$errors->createUser?->get('role')" class="mt-2" />
             </div>
 
             <div class="mt-6" x-show="role === 'student'">
                 <x-input-label for="student_id" :value="__('Mã sinh viên')" />
-                <x-text-input id="student_id" name="student_id" type="text" class="mt-1 block w-full" x-model="student_id" />
-                <x-input-error :messages="$errors->get('student_id')" class="mt-2" />
+                <x-text-input id="student_id" name="student_id" type="text" class="mt-1 block w-full" x-model="student_id"
+                    x-show="role==='student'"
+                    @blur="(async () => { if (student_id) { errors.student_id = (await checkUnique('student_id', student_id)) ? '' : 'Mã sinh viên đã được sử dụng.' } })()"
+                />
+                <x-input-error :messages="$errors->createUser?->get('student_id')" class="mt-2" />
                 <p class="mt-2 text-sm text-red-600" x-text="errors.student_id" x-show="errors.student_id"></p>
             </div>
 
             <div class="mt-6" x-show="role === 'lecturer'">
                 <x-input-label for="lecturer_id" :value="__('Mã giảng viên')" />
-                <x-text-input id="lecturer_id" name="lecturer_id" type="text" class="mt-1 block w-full" x-model="lecturer_id" />
-                <x-input-error :messages="$errors->get('lecturer_id')" class="mt-2" />
+                <x-text-input id="lecturer_id" name="lecturer_id" type="text" class="mt-1 block w-full" x-model="lecturer_id"
+                    x-show="role==='lecturer'"
+                    @blur="(async () => { if (lecturer_id) { errors.lecturer_id = (await checkUnique('lecturer_id', lecturer_id)) ? '' : 'Mã giảng viên đã được sử dụng.' } })()"
+                />
+                <x-input-error :messages="$errors->createUser?->get('lecturer_id')" class="mt-2" />
                 <p class="mt-2 text-sm text-red-600" x-text="errors.lecturer_id" x-show="errors.lecturer_id"></p>
             </div>
 
             <div class="mt-6">
                 <x-input-label for="password" :value="__('Mật khẩu')" />
                 <x-text-input id="password" name="password" type="password" class="mt-1 block w-full" x-model="password" />
+                <x-input-error :messages="$errors->createUser?->get('password')" class="mt-2" />
                 <p class="mt-2 text-sm text-red-600" x-text="errors.password" x-show="errors.password"></p>
             </div>
 
             <div class="mt-6">
                 <x-input-label for="password_confirmation" :value="__('Xác nhận mật khẩu')" />
                 <x-text-input id="password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full" x-model="password_confirmation" />
+                <x-input-error :messages="$errors->createUser?->get('password_confirmation')" class="mt-2" />
                 <p class="mt-2 text-sm text-red-600" x-text="errors.password_confirmation" x-show="errors.password_confirmation"></p>
             </div>
 
@@ -245,6 +284,14 @@
             </div>
         </form>
     </x-modal>
+
+    @if ($errors->createUser?->any())
+        <script>
+            window.addEventListener('DOMContentLoaded', function() {
+                document.dispatchEvent(new CustomEvent('open-modal', { detail: 'create-user' }));
+            });
+        </script>
+    @endif
 
     <!-- Edit User Modals -->
     @foreach($users as $user)

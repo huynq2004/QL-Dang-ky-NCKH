@@ -40,6 +40,8 @@ Route::middleware('auth')->group(function () {
 
 // Admin prefixed routes with name alias for backward compatibility
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
+    // Define specific routes BEFORE resource to avoid collision with users/{user}
+    Route::get('users/check-unique', [AdminUserController::class, 'checkUnique'])->name('users.check-unique');
     Route::resource('users', AdminUserController::class);
 });
 

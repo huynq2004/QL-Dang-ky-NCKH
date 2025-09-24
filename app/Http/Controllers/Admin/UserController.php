@@ -36,7 +36,23 @@ class UserController extends Controller
             $rules['lecturer_id'] = 'required|string|unique:lecturers,lecturer_id';
         }
 
-        $validated = $request->validate($rules);
+        $messages = [
+            'name.required' => 'Vui lòng nhập họ và tên.',
+            'email.required' => 'Vui lòng nhập email.',
+            'email.email' => 'Email không hợp lệ.',
+            'email.unique' => 'Email đã được sử dụng.',
+            'password.required' => 'Vui lòng nhập mật khẩu.',
+            'password.min' => 'Mật khẩu phải có ít nhất :min ký tự.',
+            'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
+            'role.required' => 'Vui lòng chọn vai trò.',
+            'role.in' => 'Vai trò không hợp lệ.',
+            'student_id.required' => 'Vui lòng nhập mã sinh viên.',
+            'student_id.unique' => 'Mã sinh viên đã được sử dụng.',
+            'lecturer_id.required' => 'Vui lòng nhập mã giảng viên.',
+            'lecturer_id.unique' => 'Mã giảng viên đã được sử dụng.',
+        ];
+
+        $validated = $request->validateWithBag('createUser', $rules, $messages);
 
         $user = UserManagementFacade::createUser($validated, $validated['role']);
         return redirect()->route('admin.users.index')->with('success', 'Tạo người dùng thành công.');
@@ -61,7 +77,20 @@ class UserController extends Controller
             $rules['lecturer_id'] = 'required|string|unique:lecturers,lecturer_id,' . $ignore . ',id';
         }
 
-        $validated = $request->validate($rules);
+        $messages = [
+            'name.required' => 'Vui lòng nhập họ và tên.',
+            'email.required' => 'Vui lòng nhập email.',
+            'email.email' => 'Email không hợp lệ.',
+            'email.unique' => 'Email đã được sử dụng.',
+            'password.min' => 'Mật khẩu phải có ít nhất :min ký tự.',
+            'role.in' => 'Vai trò không hợp lệ.',
+            'student_id.required' => 'Vui lòng nhập mã sinh viên.',
+            'student_id.unique' => 'Mã sinh viên đã được sử dụng.',
+            'lecturer_id.required' => 'Vui lòng nhập mã giảng viên.',
+            'lecturer_id.unique' => 'Mã giảng viên đã được sử dụng.',
+        ];
+
+        $validated = $request->validate($rules, $messages);
 
         $user = UserManagementFacade::updateUser($id, $validated);
         return redirect()->route('admin.users.index')->with('success', 'Cập nhật người dùng thành công.');
@@ -87,5 +116,25 @@ class UserController extends Controller
 
         UserManagementFacade::changeRole($id, $validated['role']);
         return redirect()->route('admin.users.index')->with('success', 'Cập nhật vai trò thành công.');
+    }
+
+    public function checkUnique(Request $request)
+    {
+        $type = $request->query('type'); // email|student_id|lecturer_id
+        $value = trim((string) $request->query('value'));
+        if ($value === '') {
+            return response()->json(['unique' => true]);
+        }
+
+        $exists = false;
+        if ($type === 'email') {
+            $exists = \App\Models\User::where('email', $value)->exists();
+        } elseif ($type === 'student_id') {
+            $exists = \App\Models\Student::where('student_id', $value)->exists();
+        } elseif ($type === 'lecturer_id') {
+            $exists = \App\Models\Lecturer::where('lecturer_id', $value)->exists();
+        }
+
+        return response()->json(['unique' => !$exists]);
     }
 } 
