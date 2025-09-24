@@ -103,7 +103,7 @@ class ProposalController extends Controller
 
     public function show(Proposal $proposal)
     {
-        $proposal->load(['lecturer.user', 'student.user']);
+        $proposal->load(['lecturer.user', 'student.user', 'invitations.student.user']);
         $user = Auth::user();
         
         $canRequest = false;

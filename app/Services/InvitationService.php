@@ -99,9 +99,7 @@ class InvitationService implements InvitationServiceInterface
             $invitation = Invitation::with(['lecturer', 'proposal'])->findOrFail($id);
 
             if ($normalized === 'accepted') {
-                if (!$this->lecturerCanAcceptMore($invitation->lecturer_id)) {
-                    throw new \RuntimeException('Lecturer is at capacity');
-                }
+                // Capacity enforced per proposal (not global per lecturer)
                 if (!$this->proposalHasCapacity($invitation->proposal_id)) {
                     throw new \RuntimeException('Proposal has no capacity');
                 }
