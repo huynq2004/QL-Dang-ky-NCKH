@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Contracts\UserManagementInterface;
 use App\Models\User;
+use App\Models\Student;
+use App\Models\Lecturer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +44,20 @@ class UserManagementService implements UserManagementInterface
             // Assign role string field
             $user->update(['role' => $role]);
 
+            // Create associated role model with external code
+            if ($role === 'student' && isset($data['student_id'])) {
+                Student::create([
+                    'user_id' => $user->id,
+                    'student_id' => $data['student_id'],
+                ]);
+            }
+            if ($role === 'lecturer' && isset($data['lecturer_id'])) {
+                Lecturer::create([
+                    'user_id' => $user->id,
+                    'lecturer_id' => $data['lecturer_id'],
+                ]);
+            }
+
             DB::commit();
             return $user;
         } catch (\Exception $e) {
@@ -62,16 +78,49 @@ class UserManagementService implements UserManagementInterface
         DB::beginTransaction();
         try {
             $user = User::findOrFail($id);
-            
+
             // Update basic info
             $user->update([
                 'name' => $data['name'],
                 'email' => $data['email'],
             ]);
 
-            // Update role if provided (string column)
-            if (isset($data['role'])) {
+            // Optional: update password when provided
+            if (isset($data['password']) && $data['password']) {
+                $user->update(['password' => Hash::make($data['password'])]);
+            }
+
+            // Handle role change and external codes
+            if (isset($data['role']) && $data['role'] !== $user->role) {
+                // Remove old relation
+                if ($user->role === 'student') {
+                    $user->student()->delete();
+                } elseif ($user->role === 'lecturer') {
+                    $user->lecturer()->delete();
+                }
+
+                // Create new relation with code
+                if ($data['role'] === 'student') {
+                    Student::create([
+                        'user_id' => $user->id,
+                        'student_id' => $data['student_id'] ?? '',
+                    ]);
+                } elseif ($data['role'] === 'lecturer') {
+                    Lecturer::create([
+                        'user_id' => $user->id,
+                        'lecturer_id' => $data['lecturer_id'] ?? '',
+                    ]);
+                }
+
                 $user->update(['role' => $data['role']]);
+            } else {
+                // Update existing code values when role unchanged
+                if ($user->role === 'student' && isset($data['student_id']) && $user->student) {
+                    $user->student->update(['student_id' => $data['student_id']]);
+                }
+                if ($user->role === 'lecturer' && isset($data['lecturer_id']) && $user->lecturer) {
+                    $user->lecturer->update(['lecturer_id' => $data['lecturer_id']]);
+                }
             }
 
             DB::commit();
@@ -93,9 +142,14 @@ class UserManagementService implements UserManagementInterface
         DB::beginTransaction();
         try {
             $user = User::findOrFail($id);
-            
-            // No role relations to detach when using string roles
-            
+
+            // Delete role relations if exist
+            if ($user->role === 'student') {
+                $user->student()->delete();
+            } elseif ($user->role === 'lecturer') {
+                $user->lecturer()->delete();
+            }
+
             // Delete user
             $user->delete();
 

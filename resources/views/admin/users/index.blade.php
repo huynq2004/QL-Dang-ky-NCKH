@@ -195,6 +195,7 @@
             <div class="mt-6">
                 <x-input-label for="email" :value="__('Email')" />
                 <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" x-model="email" />
+                <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 <p class="mt-2 text-sm text-red-600" x-text="errors.email" x-show="errors.email"></p>
             </div>
 
@@ -210,12 +211,14 @@
             <div class="mt-6" x-show="role === 'student'">
                 <x-input-label for="student_id" :value="__('Mã sinh viên')" />
                 <x-text-input id="student_id" name="student_id" type="text" class="mt-1 block w-full" x-model="student_id" />
+                <x-input-error :messages="$errors->get('student_id')" class="mt-2" />
                 <p class="mt-2 text-sm text-red-600" x-text="errors.student_id" x-show="errors.student_id"></p>
             </div>
 
             <div class="mt-6" x-show="role === 'lecturer'">
                 <x-input-label for="lecturer_id" :value="__('Mã giảng viên')" />
                 <x-text-input id="lecturer_id" name="lecturer_id" type="text" class="mt-1 block w-full" x-model="lecturer_id" />
+                <x-input-error :messages="$errors->get('lecturer_id')" class="mt-2" />
                 <p class="mt-2 text-sm text-red-600" x-text="errors.lecturer_id" x-show="errors.lecturer_id"></p>
             </div>
 

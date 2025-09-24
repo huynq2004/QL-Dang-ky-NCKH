@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Facades\UserManagementFacade;
+use App\Models\User;
 
 class UserController extends Controller
 {
@@ -22,12 +23,20 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:8',
-            'role' => 'required|string'
-        ]);
+            'password' => 'required|min:8|confirmed',
+            'role' => 'required|string|in:student,lecturer,admin',
+        ];
+
+        if ($request->input('role') === 'student') {
+            $rules['student_id'] = 'required|string|unique:students,student_id';
+        } elseif ($request->input('role') === 'lecturer') {
+            $rules['lecturer_id'] = 'required|string|unique:lecturers,lecturer_id';
+        }
+
+        $validated = $request->validate($rules);
 
         $user = UserManagementFacade::createUser($validated, $validated['role']);
         return redirect()->route('admin.users.index')->with('success', 'Tạo người dùng thành công.');
@@ -35,11 +44,24 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
+        $user = User::with(['student', 'lecturer'])->findOrFail($id);
+
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
-            'role' => 'sometimes|string'
-        ]);
+            'role' => 'sometimes|string|in:student,lecturer,admin',
+            'password' => 'nullable|min:8',
+        ];
+
+        if ($request->input('role', $user->role) === 'student') {
+            $ignore = $user->student->id ?? 'NULL';
+            $rules['student_id'] = 'required|string|unique:students,student_id,' . $ignore . ',id';
+        } elseif ($request->input('role', $user->role) === 'lecturer') {
+            $ignore = $user->lecturer->id ?? 'NULL';
+            $rules['lecturer_id'] = 'required|string|unique:lecturers,lecturer_id,' . $ignore . ',id';
+        }
+
+        $validated = $request->validate($rules);
 
         $user = UserManagementFacade::updateUser($id, $validated);
         return redirect()->route('admin.users.index')->with('success', 'Cập nhật người dùng thành công.');
