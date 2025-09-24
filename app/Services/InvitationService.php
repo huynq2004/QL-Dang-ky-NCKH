@@ -73,10 +73,10 @@ class InvitationService implements InvitationServiceInterface
 
     public function lecturerCanAcceptMore(int $lecturerId): bool
     {
-        $lecturer = Lecturer::findOrFail($lecturerId);
+        $max = $this->getLecturerMaxStudents($lecturerId);
         $accepted = Invitation::where('lecturer_id', $lecturerId)
             ->where('status', 'accepted')->count();
-        return $accepted < (int) $lecturer->max_students;
+        return $accepted < $max;
     }
 
     public function proposalHasCapacity(int $proposalId): bool
@@ -84,7 +84,8 @@ class InvitationService implements InvitationServiceInterface
         $proposal = Proposal::findOrFail($proposalId);
         $accepted = Invitation::where('proposal_id', $proposalId)
             ->where('status', 'accepted')->count();
-        return $accepted < (int) optional($proposal->lecturer)->max_students;
+        $max = $this->getLecturerMaxStudents(optional($proposal->lecturer)->id);
+        return $accepted < $max;
     }
 
     public function processInvitation(int $id, string $action): Invitation
@@ -200,5 +201,20 @@ class InvitationService implements InvitationServiceInterface
         return Invitation::where('lecturer_id', $lecturer->id)
             ->where('status', 'accepted')
             ->count();
+    }
+
+    private function getLecturerMaxStudents(?int $lecturerId): int
+    {
+        $default = (int) config('nckh.max_students', config('app.max_students', 5));
+        if (!$lecturerId) {
+            return $default;
+        }
+        $lecturer = Lecturer::find($lecturerId);
+        if (!$lecturer) {
+            return $default;
+        }
+        $value = $lecturer->max_students;
+        $normalized = is_null($value) ? 0 : (int) $value;
+        return $normalized > 0 ? $normalized : $default;
     }
 } 

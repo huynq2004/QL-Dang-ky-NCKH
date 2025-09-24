@@ -41,8 +41,14 @@ class InvitationController extends Controller
         try {
             InvitationFacade::processInvitation($invitation->id, 'accept');
             return redirect()->back()->with('success', 'Đã chấp nhận yêu cầu thành công.');
-        } catch (\InvalidArgumentException $e) {
-            return redirect()->back()->with('error', 'Đã xảy ra lỗi. ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            $message = $e->getMessage();
+            if (str_contains($message, 'Lecturer is at capacity') || str_contains($message, 'Proposal has no capacity')) {
+                $message = 'Không thể chấp nhận lời mời: Đề tài/giảng viên đã đạt số lượng tối đa.';
+            } else {
+                $message = 'Đã xảy ra lỗi. ' . $message;
+            }
+            return redirect()->back()->with('error', $message);
         }
     }
 
