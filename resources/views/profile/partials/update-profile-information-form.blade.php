@@ -39,11 +39,7 @@
                             </button>
                         </p>
 
-                        @if (session('status') === 'verification-link-sent')
-                            <p class="mt-2 font-medium text-sm text-green-600">
-                                {{ __('Một liên kết xác thực mới đã được gửi đến email của bạn.') }}
-                            </p>
-                        @endif
+                        {{-- Khối hiện session cũ: đã thay bằng toast ở layout --}}
                     </div>
                 @endif
             </div>

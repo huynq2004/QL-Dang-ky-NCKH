@@ -8,11 +8,7 @@
                 <div class="card-header">{{ __('Lời mời hướng dẫn') }}</div>
 
                 <div class="card-body">
-                    @if (session('success'))
-                        <div class="alert alert-success" role="alert">
-                            {{ session('success') }}
-                        </div>
-                    @endif
+                    {{-- Khối hiện session cũ: đã thay bằng toast ở layout --}}
 
                     <div class="table-responsive">
                         <table class="table">
