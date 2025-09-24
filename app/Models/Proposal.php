@@ -14,7 +14,6 @@ class Proposal extends Model
         'field',
         'lecturer_id',
         'student_id',
-        'current_members',
         'is_visible',
         'status',
     ];
@@ -47,6 +46,7 @@ class Proposal extends Model
 
     public function canAcceptMoreMembers(): bool
     {
-        return $this->getAcceptedMembersCount() < 5;
+        return app(\App\Services\InvitationService::class)
+               ->proposalHasCapacity($this->id);
     }
 } 

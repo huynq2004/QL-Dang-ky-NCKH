@@ -2,9 +2,22 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Tab Navigation -->
-            @if(Auth::user()->role !== 'admin')
             <div class="mb-4 border-b border-gray-200">
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+                    @if(Auth::user()->role === 'admin')
+                    <li class="me-2">
+                        <a href="{{ route('dashboard') }}" 
+                           class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'available' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
+                            {{ __('DANH SÁCH ĐỀ TÀI') }}
+                        </a>
+                    </li>
+                    <li class="me-2">
+                        <a href="{{ route('admin.users.index') }}"
+                           class="inline-block p-4 border-b-2 rounded-t-lg {{ request()->routeIs('admin.users.*') ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
+                            {{ __('QUẢN LÝ NGƯỜI DÙNG') }}
+                        </a>
+                    </li>
+                    @else
                     <li class="me-2">
                         <a href="{{ route('dashboard') }}" 
                            class="inline-block p-4 border-b-2 rounded-t-lg {{ $activeTab === 'available' ? 'border-indigo-600 text-indigo-600' : 'border-transparent' }}">
@@ -31,9 +44,9 @@
                             {{ Auth::user()->role === 'lecturer' ? __('LỜI MỜI HƯỚNG DẪN') : __('YÊU CẦU THAM GIA') }}
                         </a>
                     </li>
+                    @endif
                 </ul>
             </div>
-            @endif
 
             <!-- Tab Contents -->
             <div>
@@ -142,7 +155,7 @@
                                         <x-secondary-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'edit-proposal-{{ $proposal->id }}')">
                                             {{ __('Sửa') }}
                                         </x-secondary-button>
-                                        @if($proposal->invitations->isEmpty())
+                                        @if(Auth::user()->role === 'admin')
                                             <x-danger-button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'delete-proposal-{{ $proposal->id }}')">
                                                 {{ __('Xóa') }}
                                             </x-danger-button>
@@ -201,6 +214,38 @@
                 @if(Auth::user()->role === 'student')
                 <!-- Find Supervisor Tab -->
                 <div id="lecturers" class="tab-content {{ $activeTab !== 'lecturers' ? 'hidden' : '' }}">
+                    <!-- Tìm kiếm giảng viên -->
+                    <form method="GET" action="{{ route('find-supervisor') }}" class="mb-4 bg-white p-4 shadow-sm sm:rounded-lg text-gray-900">
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-2">
+                          <input type="text" name="q" value="{{ request('q') }}"
+                                 class="w-full border-gray-300 rounded-md"
+                                 placeholder="Nhập từ khoá tìm kiếm">
+                        </div>
+                        <div class="flex items-end gap-3">
+                          <select name="by" class="border-gray-300 rounded-md">
+                            <option value="name" {{ request('by','name')==='name' ? 'selected' : '' }}>Theo tên</option>
+                            <option value="code" {{ request('by')==='code' ? 'selected' : '' }}>Theo mã giảng viên</option>
+                            <option value="department" {{ request('by')==='department' ? 'selected' : '' }}>Theo khoa/bộ môn</option>
+                          </select>
+
+                          <!-- Nút Tìm kiếm: nền đen, chữ trắng, chống override -->
+                          <button type="submit"
+                                  class="inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium
+                                         !bg-black !text-white shadow ring-1 ring-black/10
+                                         hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
+                            Tìm kiếm
+                          </button>
+
+                          <a href="{{ route('find-supervisor') }}"
+                             class="px-4 py-2 bg-gray-200 rounded-md text-xs uppercase tracking-wider">
+                            Xoá lọc
+                          </a>
+                        </div>
+                      </div>
+                    </form>
+                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         @forelse($lecturers ?? [] as $lecturer)
                             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">

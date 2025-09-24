@@ -1,6 +1,5 @@
 <x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    {{-- Khối hiện session cũ: đã thay bằng toast ở layout --}}
 
     <form method="POST" action="{{ route('login') }}">
         @csrf

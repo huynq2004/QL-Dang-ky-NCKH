@@ -3,8 +3,7 @@
         {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
     </div>
 
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    {{-- Khối hiện session cũ: đã thay bằng toast ở layout --}}
 
     <form method="POST" action="{{ route('password.email') }}">
         @csrf

@@ -20,6 +20,9 @@
 
             <!-- Page Content -->
             <main>
+                @if(session('success') || session('error') || session('status'))
+                    @include('components.toast')
+                @endif
                 {{ $slot }}
             </main>
         </div>

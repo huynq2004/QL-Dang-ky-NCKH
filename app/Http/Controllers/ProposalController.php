@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use App\Contracts\ProposalServiceInterface;
 use Illuminate\Support\Facades\Auth;
 use App\Facades\ProposalFacade;
+use App\Facades\InvitationFacade;
+use App\Facades\LecturerFacade;
 use App\Traits\HasCommonData;
 
 class ProposalController extends Controller
@@ -26,7 +28,7 @@ class ProposalController extends Controller
     protected function checkStudentRole()
     {
         if (Auth::user()->role !== 'student') {
-            abort(403, 'Only students can perform this action.');
+            abort(403, 'Chỉ sinh viên mới được thực hiện thao tác này.');
         }
     }
 
@@ -35,7 +37,7 @@ class ProposalController extends Controller
         $user = Auth::user();
         $data = [
             'activeTab' => 'available',
-            'proposals' => Proposal::where('status', '!=', 'draft')->get(),
+            'proposals' => ProposalFacade::getProposals(),
             'studentProposals' => collect(),
             'invitations' => collect(),
             'lecturers' => collect(),
@@ -44,13 +46,12 @@ class ProposalController extends Controller
 
         if ($user->role === 'student') {
             $data['studentProposals'] = ProposalFacade::getStudentProposals($user->student);
-            $data['invitations'] = ProposalFacade::getStudentInvitations($user->student);
-            $data['lecturers'] = ProposalFacade::getAvailableLecturers();
+            $data['invitations'] = InvitationFacade::getStudentInvitations($user->student);
+            $data['lecturers'] = LecturerFacade::getAvailableLecturers();
         } elseif ($user->role === 'lecturer') {
-            $data['invitations'] = Invitation::where('lecturer_id', $user->lecturer->id)->get();
-            $data['lecturerProposals'] = Proposal::where('lecturer_id', $user->lecturer->id)->get();
+            $data['invitations'] = InvitationFacade::getInvitations($user);
+            $data['lecturerProposals'] = ProposalFacade::getLecturerProposals($user->lecturer);
         }
-        // Admin can see all proposals without additional filtering
 
         return view('proposals.index', $data);
     }
@@ -60,7 +61,7 @@ class ProposalController extends Controller
         $user = Auth::user();
         $data = [
             'activeTab' => 'my-topics',
-            'proposals' => Proposal::where('status', '!=', 'draft')->get(),
+            'proposals' => collect(),
             'studentProposals' => collect(),
             'invitations' => collect(),
             'lecturers' => collect(),
@@ -69,18 +70,17 @@ class ProposalController extends Controller
 
         if ($user->role === 'student') {
             $data['studentProposals'] = ProposalFacade::getStudentProposals($user->student);
-            $data['invitations'] = ProposalFacade::getStudentInvitations($user->student);
-            $data['lecturers'] = ProposalFacade::getAvailableLecturers();
+            $data['invitations'] = InvitationFacade::getStudentInvitations($user->student);
+            $data['lecturers'] = LecturerFacade::getAvailableLecturers();
         } elseif ($user->role === 'lecturer') {
-            $data['invitations'] = Invitation::where('lecturer_id', $user->lecturer->id)->get();
-            $data['lecturerProposals'] = Proposal::where('lecturer_id', $user->lecturer->id)->get();
+            $data['invitations'] = InvitationFacade::getInvitations($user);
+            $data['lecturerProposals'] = ProposalFacade::getLecturerActiveProposals($user->lecturer);
         }
-        // Admin can see all proposals without additional filtering
 
         return view('proposals.index', $data);
     }
 
-    public function findSupervisor()
+    public function findSupervisor(\Illuminate\Http\Request $request)
     {
         $user = Auth::user();
         if ($user->role !== 'student') {
@@ -89,10 +89,13 @@ class ProposalController extends Controller
 
         $data = [
             'activeTab' => 'lecturers',
-            'proposals' => Proposal::where('status', '!=', 'draft')->get(),
+            'proposals' => ProposalFacade::getProposals(),
             'studentProposals' => ProposalFacade::getStudentProposals($user->student),
-            'invitations' => ProposalFacade::getStudentInvitations($user->student),
-            'lecturers' => ProposalFacade::getAvailableLecturers()
+            'invitations' => InvitationFacade::getStudentInvitations($user->student),
+            'lecturers' => LecturerFacade::searchAvailableLecturersBy(
+                $request->input('by', 'name'),
+                $request->input('q')
+            )
         ];
 
         return view('proposals.index', $data);
@@ -100,17 +103,17 @@ class ProposalController extends Controller
 
     public function show(Proposal $proposal)
     {
-        $proposal->load(['lecturer.user', 'student.user']);
+        $proposal->load(['lecturer.user', 'student.user', 'invitations.student.user']);
         $user = Auth::user();
         
         $canRequest = false;
         $existingRequest = null;
         
         if ($user->role === 'student') {
-            $existingRequest = Invitation::where([
-                'student_id' => $user->student->id,
-                'proposal_id' => $proposal->id
-            ])->first();
+            $existingRequest = InvitationFacade::findExistingInvitation(
+                $user->student->id,
+                $proposal->id
+            );
             
             $canRequest = !$existingRequest && $proposal->status === 'active';
         }
@@ -120,7 +123,10 @@ class ProposalController extends Controller
 
     public function create()
     {
-        $this->checkStudentRole();
+        $user = Auth::user();
+        if ($user->role !== 'student' && $user->role !== 'lecturer') {
+            abort(403, 'Chỉ sinh viên và giảng viên mới được tạo đề tài.');
+        }
         return view('proposals.create');
     }
 
@@ -130,12 +136,12 @@ class ProposalController extends Controller
 
         if ($proposal->student_id !== Auth::user()->student->id) {
             return redirect()->route('proposals.index')
-                ->with('error', 'You are not authorized to edit this proposal.');
+                ->with('error', 'Bạn không có quyền sửa đề tài này.');
         }
 
         if ($proposal->status === 'approved') {
             return redirect()->route('proposals.index')
-                ->with('error', 'You cannot edit an approved proposal.');
+                ->with('error', 'Bạn không thể sửa đề tài đã được phê duyệt.');
         }
 
         return view('proposals.edit', compact('proposal'));
@@ -143,47 +149,44 @@ class ProposalController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $user = Auth::user();
+        
+        // Common validation rules
+        $rules = [
             'title' => 'required|string|max:255',
             'field' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'lecturer_id' => 'required|exists:lecturers,id',
-            'message' => 'nullable|string|max:500'
-        ]);
+        ];
 
-        $user = Auth::user();
-        
-        $proposal = new Proposal();
-        $proposal->title = $request->title;
-        $proposal->field = $request->field;
-        $proposal->description = $request->description;
-        $proposal->lecturer_id = $request->lecturer_id;
-        
+        // Add role-specific validation rules
         if ($user->role === 'student') {
-            $proposal->student_id = $user->student->id;
-            $proposal->status = 'draft';
-        } else {
-            $proposal->status = 'active';
+            $rules['lecturer_id'] = 'required|exists:lecturers,id';
+            $rules['message'] = 'nullable|string|max:500';
         }
+
+        $request->validate($rules);
+
+        $data = $request->only(['title', 'field', 'description']);
         
-        $proposal->save();
-
         if ($user->role === 'student') {
-            // Create invitation
-            Invitation::create([
-                'student_id' => $user->student->id,
-                'lecturer_id' => $request->lecturer_id,
-                'proposal_id' => $proposal->id,
-                'message' => $request->message,
-                'status' => 'pending'
-            ]);
-
-            return redirect()->route('dashboard')
-                ->with('success', 'Research topic has been created and a request has been sent to the supervisor. Please wait for their response.');
+            $data['student_id'] = $user->student->id;
+            $data['lecturer_id'] = $request->lecturer_id;
+            $data['status'] = 'draft';
+            
+            $proposal = ProposalFacade::submitProposalWithInvitation($data);
+        } else {
+            $lecturerId = optional($user->lecturer)->id;
+            if (!$lecturerId) {
+                return redirect()->back()->with('error', 'Không tìm thấy hồ sơ giảng viên. Vui lòng liên hệ quản trị viên.');
+            }
+            $data['lecturer_id'] = $lecturerId;
+            $data['status'] = 'active';
+            
+            $proposal = ProposalFacade::createProposal($data);
         }
 
         return redirect()->route('dashboard')
-            ->with('success', 'Research topic created successfully.');
+            ->with('success', 'Đề tài nghiên cứu đã được tạo thành công.');
     }
 
     public function update(Request $request, Proposal $proposal)
@@ -201,34 +204,28 @@ class ProposalController extends Controller
             'status' => 'required|in:draft,active,completed,cancelled'
         ]);
 
-        $this->proposalService->updateProposal($proposal, $validated);
+        ProposalFacade::updateProposalAndNotify($proposal, $validated);
 
-        return redirect()->route('dashboard')->with('success', 'Research topic updated successfully.');
+        return redirect()->route('dashboard')->with('success', 'Cập nhật đề tài thành công.');
     }
 
     public function destroy(Proposal $proposal)
     {
         $user = Auth::user();
         
-        if ($user->role !== 'lecturer' || $proposal->lecturer_id !== $user->lecturer->id) {
-            return redirect()->back()->with('error', 'You are not authorized to delete this proposal.');
+        if ($user->role !== 'admin') {
+            return redirect()->back()->with('error', 'Chỉ quản trị viên mới có quyền xoá đề tài.');
         }
 
         ProposalFacade::deleteProposal($proposal);
 
-        return redirect()->route('dashboard')->with('success', 'Proposal deleted successfully.');
+        return redirect()->route('dashboard')->with('success', 'Xoá đề tài thành công.');
     }
 
     public function invitations()
     {
         $user = Auth::user();
-        if ($user->role === 'admin') {
-            $invitations = Invitation::all();
-        } elseif ($user->role === 'student') {
-            $invitations = Invitation::where('student_id', $user->student->id)->get();
-        } else {
-            $invitations = Invitation::where('lecturer_id', $user->lecturer->id)->get();
-        }
+        $invitations = InvitationFacade::getInvitations($user);
         return view('proposals.invitations', compact('invitations'));
     }
 
@@ -239,60 +236,27 @@ class ProposalController extends Controller
 
         // Kiểm tra quyền xử lý invitation
         if ($user->role === 'student' && $invitation->student_id !== $user->student->id) {
-            return back()->with('error', 'You are not authorized to process this invitation.');
+            return back()->with('error', 'Bạn không có quyền xử lý lời mời này.');
         }
         if ($user->role === 'lecturer' && $invitation->lecturer_id !== $user->lecturer->id) {
-            return back()->with('error', 'You are not authorized to process this invitation.');
+            return back()->with('error', 'Bạn không có quyền xử lý lời mời này.');
         }
 
         // Kiểm tra action hợp lệ
         if (!in_array($action, ['accept', 'reject', 'withdraw'])) {
-            return back()->with('error', 'Invalid action');
+            return back()->with('error', 'Thao tác không hợp lệ');
         }
 
         // Student chỉ có thể withdraw trong vòng 24h
         if ($user->role === 'student' && $action === 'withdraw') {
             $hours = $invitation->created_at->diffInHours(now());
             if ($hours > 24) {
-                return back()->with('error', 'You can only withdraw an invitation within 24 hours of sending it.');
+                return back()->with('error', 'Bạn chỉ có thể thu hồi lời mời trong vòng 24 giờ kể từ khi gửi.');
             }
         }
 
-        // Xử lý action
-        switch ($action) {
-            case 'accept':
-                $invitation->status = 'accepted';
-                $invitation->proposal->status = 'active';
-                
-                // Create invitation for the student who created the proposal if they don't have one
-                if ($invitation->proposal->student_id) {
-                    $existingInvitation = Invitation::where([
-                        'student_id' => $invitation->proposal->student_id,
-                        'proposal_id' => $invitation->proposal->id
-                    ])->first();
-
-                    if (!$existingInvitation) {
-                        Invitation::create([
-                            'student_id' => $invitation->proposal->student_id,
-                            'lecturer_id' => $invitation->proposal->lecturer_id,
-                            'proposal_id' => $invitation->proposal->id,
-                            'status' => 'accepted'
-                        ]);
-                    }
-                }
-                
-                $invitation->proposal->save();
-                break;
-            case 'reject':
-                $invitation->status = 'rejected';
-                break;
-            case 'withdraw':
-                $invitation->status = 'withdrawn';
-                break;
-        }
-
-        $invitation->save();
-        return back()->with('success', 'Invitation ' . $action . 'ed successfully');
+        InvitationFacade::processInvitation($invitation->id, $action);
+        return back()->with('success', 'Xử lý lời mời thành công.');
     }
 
     public function invite(Proposal $proposal)
@@ -300,20 +264,21 @@ class ProposalController extends Controller
         $user = Auth::user();
         
         if ($user->role !== 'student') {
-            return redirect()->back()->with('error', 'Only students can send invitations.');
+            return redirect()->back()->with('error', 'Chỉ sinh viên mới có thể gửi lời mời.');
         }
 
-        if (!ProposalFacade::canSendInvitation($user->student, $proposal->lecturer)) {
-            return redirect()->back()->with('error', 'You cannot send an invitation at this time.');
+        if (!InvitationFacade::canSendInvitation($user->student, $proposal->lecturer)) {
+            return redirect()->back()->with('error', 'Hiện bạn không thể gửi lời mời.');
         }
 
-        ProposalFacade::createInvitation([
+        InvitationFacade::createInvitation([
             'student_id' => $user->student->id,
             'lecturer_id' => $proposal->lecturer_id,
-            'proposal_id' => $proposal->id
+            'proposal_id' => $proposal->id,
+            'status' => 'pending'
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Invitation sent successfully.');
+        return redirect()->route('dashboard')->with('success', 'Đã gửi lời mời thành công.');
     }
 
     public function sendInvitation(Proposal $proposal)
@@ -325,24 +290,24 @@ class ProposalController extends Controller
         }
 
         // Check if invitation already exists
-        $existingInvitation = Invitation::where([
-            'student_id' => $user->student->id,
-            'lecturer_id' => $proposal->lecturer_id,
-            'proposal_id' => $proposal->id,
-        ])->exists();
+        $existingInvitation = InvitationFacade::findExistingInvitation(
+            $user->student->id,
+            $proposal->id,
+            $proposal->lecturer_id
+        );
 
-        if ($existingInvitation) {
-            return redirect()->back()->with('error', 'You have already sent an invitation for this proposal.');
+        if ($existingInvitation !== null) {
+            return redirect()->back()->with('error', 'Bạn đã gửi lời mời cho đề tài này trước đó.');
         }
 
-        Invitation::create([
+        InvitationFacade::createInvitation([
             'student_id' => $user->student->id,
             'lecturer_id' => $proposal->lecturer_id,
             'proposal_id' => $proposal->id,
             'status' => 'pending'
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Invitation sent successfully.');
+        return redirect()->route('dashboard')->with('success', 'Đã gửi lời mời thành công.');
     }
 
     public function withdrawInvitation(Invitation $invitation)
@@ -354,12 +319,12 @@ class ProposalController extends Controller
         }
 
         if ($invitation->status !== 'pending') {
-            return redirect()->back()->with('error', 'You can only withdraw pending invitations.');
+            return redirect()->back()->with('error', 'Chỉ có thể thu hồi các lời mời đang chờ xử lý.');
         }
 
-        $invitation->delete();
+        InvitationFacade::withdrawInvitation($invitation->id);
 
-        return redirect()->route('dashboard')->with('success', 'Invitation withdrawn successfully.');
+        return redirect()->route('dashboard')->with('success', 'Đã thu hồi lời mời thành công.');
     }
 
     public function requestToJoin(Proposal $proposal)
@@ -367,34 +332,33 @@ class ProposalController extends Controller
         $user = Auth::user();
         
         if ($user->role !== 'student') {
-            return redirect()->back()->with('error', 'Only students can request to join a research topic.');
+            return redirect()->back()->with('error', 'Chỉ sinh viên mới có thể yêu cầu tham gia đề tài.');
         }
 
-        // Check if the proposal already has 5 participating students
-        $participatingStudentsCount = $proposal->invitations()->where('status', 'accepted')->count();
-        if ($participatingStudentsCount >= 5) {
-            return redirect()->back()->with('error', 'This research topic has reached the maximum number of participating students (5).');
+        // Pre-check capacity via service (avoid hard-coded limit)
+        if (!InvitationFacade::proposalHasCapacity($proposal->id)) {
+            return redirect()->back()->with('error', 'Đề tài đã đạt số lượng sinh viên tham gia tối đa.');
         }
 
         // Check if student already has a request for this proposal
-        $existingRequest = Invitation::where([
-            'student_id' => $user->student->id,
-            'proposal_id' => $proposal->id
-        ])->first();
+        $existingRequest = InvitationFacade::findExistingInvitation(
+            $user->student->id,
+            $proposal->id
+        );
 
         if ($existingRequest) {
-            return redirect()->back()->with('error', 'You have already sent a request for this research topic.');
+            return redirect()->back()->with('error', 'Bạn đã gửi yêu cầu cho đề tài này trước đó.');
         }
 
         // Create new invitation
-        Invitation::create([
+        InvitationFacade::createInvitation([
             'student_id' => $user->student->id,
             'lecturer_id' => $proposal->lecturer_id,
             'proposal_id' => $proposal->id,
             'status' => 'pending'
         ]);
 
-        return redirect()->back()->with('success', 'Your request has been sent. Please wait for the supervisor\'s response.');
+        return redirect()->back()->with('success', 'Yêu cầu đã được gửi. Vui lòng chờ phản hồi từ giảng viên hướng dẫn.');
     }
 
     public function withdrawRequest(Invitation $invitation)
@@ -406,11 +370,11 @@ class ProposalController extends Controller
         }
 
         if ($invitation->status !== 'pending') {
-            return redirect()->back()->with('error', 'You can only withdraw pending requests.');
+            return redirect()->back()->with('error', 'Chỉ có thể thu hồi các yêu cầu đang chờ xử lý.');
         }
 
-        $invitation->delete();
+        InvitationFacade::withdrawInvitation($invitation->id);
 
-        return redirect()->back()->with('success', 'Request withdrawn successfully.');
+        return redirect()->back()->with('success', 'Đã thu hồi yêu cầu thành công.');
     }
 } 

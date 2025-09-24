@@ -24,9 +24,16 @@
 
                         <div>
                             <h3 class="font-semibold mb-2">{{ __('Trạng thái') }}</h3>
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                {{ $proposal->status === 'active' ? 'bg-green-100 text-green-800' : 
-                                   ($proposal->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                            @php
+                                $cls = match($proposal->status) {
+                                    'active' => 'bg-green-100 text-green-800',
+                                    'draft' => 'bg-yellow-100 text-yellow-800',
+                                    'completed' => 'bg-blue-100 text-blue-800',
+                                    'cancelled' => 'bg-red-100 text-red-800',
+                                    default => 'bg-gray-100 text-gray-800'
+                                };
+                            @endphp
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $cls }}">
                                 {{ ucfirst($proposal->status) }}
                             </span>
                         </div>
@@ -115,7 +122,7 @@
                     @endif
 
                     <div class="mt-6 flex justify-between">
-                        <a href="{{ url()->previous() }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+                        <a href="{{ route('my-topics') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                             {{ __('Quay lại') }}
                         </a>
 

@@ -49,8 +49,9 @@ class Invitation extends Model
 
     public function shouldBeAutoProcessed(): bool
     {
+        // Align with service: expire after 7 days
         return $this->status === 'pending' && 
-               $this->created_at->addHours(72)->isPast();
+               $this->created_at->addDays(7)->isPast();
     }
 
     public function process(string $status): void
@@ -59,9 +60,5 @@ class Invitation extends Model
             'status' => $status,
             'processed_at' => Carbon::now(),
         ]);
-
-        if ($status === 'accepted' && $this->proposal) {
-            $this->proposal->increment('current_members');
-        }
     }
 } 

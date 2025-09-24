@@ -9,6 +9,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Trạng thái') }}</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Gửi lúc') }}</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Thao tác') }}</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -25,9 +26,16 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {{ $invitation->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                       ($invitation->status === 'accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800') }}">
+                                @php
+                                    $cls = match($invitation->status) {
+                                        'pending' => 'bg-yellow-100 text-yellow-800',
+                                        'accepted' => 'bg-green-100 text-green-800',
+                                        'rejected' => 'bg-red-100 text-red-800',
+                                        'expired', 'withdrawn' => 'bg-gray-100 text-gray-800',
+                                        default => 'bg-gray-100 text-gray-800'
+                                    };
+                                @endphp
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $cls }}">
                                     {{ ucfirst($invitation->status) }}
                                 </span>
                             </td>
@@ -53,6 +61,17 @@
                                         </form>
                                     @endif
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                @if($invitation->status === 'pending')
+                                    <button type="button" class="text-gray-400 hover:text-gray-600" onclick="alert('Lời mời đang chờ xử lý không thể xoá.');" aria-label="Không thể xoá">×</button>
+                                @else
+                                    <form action="{{ route('invitations.destroy', $invitation) }}" method="POST" class="inline" onsubmit="return confirm('Xoá lời mời này khỏi hệ thống?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-gray-400 hover:text-red-600" aria-label="Xoá">×</button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @endforeach

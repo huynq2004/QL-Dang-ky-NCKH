@@ -42,6 +42,7 @@ class Lecturer extends Model
 
     public function canAcceptInvitation(): bool
     {
-        return $this->getActiveProposalsCount() < 5;
+        return app(\App\Services\InvitationService::class)
+               ->lecturerCanAcceptMore($this->id);
     }
 } 
