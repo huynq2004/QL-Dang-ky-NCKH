@@ -28,7 +28,7 @@ trait HasCommonData
         } elseif ($user->role === 'lecturer') {
             $data['proposals'] = ProposalFacade::getLecturerProposals($user->lecturer);
         } else {
-            $data['proposals'] = Proposal::with('lecturer.user')->get();
+            $data['proposals'] = ProposalFacade::getProposals();
         }
 
         return $data;

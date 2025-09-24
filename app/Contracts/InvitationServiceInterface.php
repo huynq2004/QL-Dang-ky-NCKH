@@ -19,4 +19,6 @@ interface InvitationServiceInterface
     public function canSendInvitation(Student $student, Lecturer $lecturer): bool;
     public function autoProcessExpiredInvitations(): void;
     public function findExistingInvitation(int $studentId, int $proposalId, ?int $lecturerId = null): ?Invitation;
+    public function lecturerCanAcceptMore(int $lecturerId): bool;
+    public function proposalHasCapacity(int $proposalId): bool;
 } 

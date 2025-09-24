@@ -5,7 +5,7 @@ namespace App\Facades;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static \Illuminate\Database\Eloquent\Collection getAllUsers()
+ * @method static \Illuminate\Contracts\Pagination\LengthAwarePaginator getAllUsers()
  * @method static \App\Models\User createUser(array $data, string $role)
  * @method static \App\Models\User updateUser(int $id, array $data)
  * @method static bool deleteUser(int $id)

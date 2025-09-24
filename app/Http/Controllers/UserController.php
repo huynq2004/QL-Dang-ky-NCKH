@@ -27,7 +27,7 @@ class UserController extends Controller
                 ->with('error', 'Hành động không được phép.');
         }
 
-        $users = User::with(['student', 'lecturer'])->paginate(10);
+        $users = UserManagementFacade::getAllUsers();
         return view('admin.users.index', compact('users'));
     }
 
@@ -55,25 +55,7 @@ class UserController extends Controller
         try {
             $validated = $request->validate($rules);
 
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'role' => $validated['role'],
-            ]);
-
-            // Create associated role model
-            if ($validated['role'] === 'student') {
-                Student::create([
-                    'user_id' => $user->id,
-                    'student_id' => $validated['student_id'],
-                ]);
-            } elseif ($validated['role'] === 'lecturer') {
-                Lecturer::create([
-                    'user_id' => $user->id,
-                    'lecturer_id' => $validated['lecturer_id'],
-                ]);
-            }
+            UserManagementFacade::createUser($validated, $validated['role']);
 
             return redirect()->route('users.index')
                 ->with('success', 'Người dùng đã được tạo thành công.');
@@ -114,45 +96,7 @@ class UserController extends Controller
 
         $validated = $request->validate($rules);
 
-        $user->name = $validated['name'];
-        $user->email = $validated['email'];
-        if ($request->password) {
-            $user->password = Hash::make($request->password);
-        }
-
-        // Handle role change
-        if ($user->role !== $validated['role']) {
-            // Remove old role model
-            if ($user->role === 'student') {
-                $user->student()->delete();
-            } elseif ($user->role === 'lecturer') {
-                $user->lecturer()->delete();
-            }
-
-            // Create new role model
-            if ($validated['role'] === 'student') {
-                Student::create([
-                    'user_id' => $user->id,
-                    'student_id' => $validated['student_id']
-                ]);
-            } elseif ($validated['role'] === 'lecturer') {
-                Lecturer::create([
-                    'user_id' => $user->id,
-                    'lecturer_id' => $validated['lecturer_id']
-                ]);
-            }
-
-            $user->role = $validated['role'];
-        } else {
-            // Update existing role model if ID changed
-            if ($user->role === 'student' && isset($validated['student_id'])) {
-                $user->student->update(['student_id' => $validated['student_id']]);
-            } elseif ($user->role === 'lecturer' && isset($validated['lecturer_id'])) {
-                $user->lecturer->update(['lecturer_id' => $validated['lecturer_id']]);
-            }
-        }
-
-        $user->save();
+        UserManagementFacade::updateUser($user->id, $validated);
 
         return redirect()->route('users.index')
             ->with('success', 'Thông tin người dùng đã được cập nhật thành công.');
@@ -170,14 +114,7 @@ class UserController extends Controller
                 ->with('error', 'Bạn không thể tự xoá tài khoản của chính mình.');
         }
 
-        // Delete associated role model
-        if ($user->role === 'student') {
-            $user->student()->delete();
-        } elseif ($user->role === 'lecturer') {
-            $user->lecturer()->delete();
-        }
-
-        $user->delete();
+        UserManagementFacade::deleteUser($user->id);
 
         return redirect()->route('users.index')
             ->with('success', 'Xoá người dùng thành công.');

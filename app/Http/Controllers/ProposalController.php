@@ -335,9 +335,8 @@ class ProposalController extends Controller
             return redirect()->back()->with('error', 'Chỉ sinh viên mới có thể yêu cầu tham gia đề tài.');
         }
 
-        // Check if the proposal already has 5 participating students
-        $participatingStudentsCount = $proposal->invitations()->where('status', 'accepted')->count();
-        if ($participatingStudentsCount >= 5) {
+        // Pre-check capacity via service (avoid hard-coded limit)
+        if (!InvitationFacade::proposalHasCapacity($proposal->id)) {
             return redirect()->back()->with('error', 'Đề tài đã đạt số lượng sinh viên tham gia tối đa.');
         }
 
