@@ -120,4 +120,105 @@ class InvitationController extends Controller
             return redirect()->back()->with('error', 'Đã xảy ra lỗi khi xoá lời mời.');
         }
     }
+
+    /**
+     * Xử lý lời mời với action chung (hỗ trợ kiểm thử hộp đen)
+     * 
+     * @param Request $request
+     * @param Invitation $invitation
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function processInvitation(Request $request, Invitation $invitation)
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:accept,reject,withdraw'
+        ]);
+
+        $action = $validated['action'];
+        $user = Auth::user();
+
+        try {
+            switch ($action) {
+                case 'accept':
+                    if ($user->role !== 'lecturer' || $invitation->lecturer_id !== $user->lecturer->id) {
+                        if ($user->role !== 'admin') {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Không có quyền xử lý lời mời này'
+                            ], 403);
+                        }
+                    }
+                    InvitationFacade::processInvitation($invitation->id, 'accept');
+                    $message = 'Chấp nhận lời mời thành công';
+                    break;
+
+                case 'reject':
+                    if ($user->role !== 'lecturer' || $invitation->lecturer_id !== $user->lecturer->id) {
+                        if ($user->role !== 'admin') {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Không có quyền xử lý lời mời này'
+                            ], 403);
+                        }
+                    }
+                    InvitationFacade::processInvitation($invitation->id, 'reject');
+                    $message = 'Từ chối lời mời thành công';
+                    break;
+
+                case 'withdraw':
+                    if ($user->role !== 'student' || $invitation->student_id !== $user->student->id) {
+                        if ($user->role !== 'admin') {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Không có quyền thu hồi lời mời này'
+                            ], 403);
+                        }
+                    }
+                    
+                    // Kiểm tra thời gian thu hồi (24 giờ)
+                    if ($invitation->created_at->diffInHours(now()) >= 24) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Không thể thu hồi: quá 24 giờ kể từ khi gửi'
+                        ], 422);
+                    }
+                    
+                    InvitationFacade::withdrawInvitation($invitation->id);
+                    $message = 'Thu hồi lời mời thành công';
+                    break;
+            }
+
+            // Trả về JSON response cho API testing
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message
+                ], 200);
+            }
+
+            // Trả về redirect cho web interface
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Throwable $e) {
+            $errorMessage = $e->getMessage();
+            
+            // Xử lý các lỗi cụ thể
+            if (str_contains($errorMessage, 'Lecturer is at capacity') || str_contains($errorMessage, 'Proposal has no capacity')) {
+                $errorMessage = 'Không thể chấp nhận lời mời: Đề tài/giảng viên đã đạt số lượng tối đa.';
+            } elseif (str_contains($errorMessage, 'Only pending invitations')) {
+                $errorMessage = 'Chỉ có thể xử lý lời mời ở trạng thái đang chờ';
+            } elseif (str_contains($errorMessage, 'You can only withdraw within 24 hours')) {
+                $errorMessage = 'Không thể thu hồi: quá 24 giờ kể từ khi gửi';
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 422);
+            }
+
+            return redirect()->back()->with('error', $errorMessage);
+        }
+    }
 } 
